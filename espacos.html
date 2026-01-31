@@ -1,0 +1,645 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Espaços - Sistema de Gestão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .space-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .space-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .space-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .space-card-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .space-card-info h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .space-card-info p {
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+
+    .space-card-logo {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 3rem;
+      height: 3rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card-item {
+      transition: transform 0.2s ease;
+    }
+
+    .card-item:hover {
+      transform: translateY(-2px);
+    }
+
+    .booking-modal {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .time-slot {
+      transition: all 0.2s ease;
+    }
+
+    .time-slot:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .time-slot.selected {
+      background: #10b981;
+      color: white;
+    }
+
+    .time-slot.available {
+      background: #f0fdf4;
+      border: 2px solid #10b981;
+      color: #059669;
+    }
+
+    .time-slot.unavailable {
+      background: #fef2f2;
+      border: 2px solid #ef4444;
+      color: #dc2626;
+      cursor: not-allowed;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5rem;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .calendar-day:hover {
+      background: #f3f4f6;
+    }
+
+    .calendar-day.selected {
+      background: #10b981;
+      color: white;
+    }
+
+    .calendar-day.today {
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 600;
+    }
+
+    .calendar-day.disabled {
+      color: #9ca3af;
+      cursor: not-allowed;
+    }
+  </style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="menu-container"></div>
+  <div id="app" class="h-full overflow-auto">
+   <main class="ml-64 p-8">
+    <header class="mb-8">
+     <div class="flex items-center justify-between">
+      <div>
+       <h2 class="text-3xl font-bold text-slate-800">Espaços do Clube</h2>
+       <p class="text-slate-500 mt-1">Gerencie reservas de espaços e salões</p>
+      </div>
+      <button onclick="openBookingModal()" class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+       </svg> Nova Reserva
+      </button>
+     </div>
+    </header>
+
+    <div class="bg-white rounded-xl p-6 shadow-sm mb-6">
+     <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
+      <div class="flex-1 relative w-full md:w-auto">
+       <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+       </svg>
+       <input type="text" id="search-space" placeholder="Buscar espaço..." class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+      </div>
+      <div class="flex gap-3 flex-wrap">
+       <select id="filter-type" class="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+        <option value="">Todos os tipos</option>
+        <option value="salao">Salão de Festas</option>
+        <option value="churrasqueira">Churrasqueira</option>
+        <option value="piscina">Piscina</option>
+        <option value="quadra">Quadra</option>
+       </select>
+       <select id="filter-availability" class="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+        <option value="">Disponibilidade</option>
+        <option value="available">Disponível</option>
+        <option value="booked">Reservado</option>
+       </select>
+      </div>
+     </div>
+    </div>
+
+    <div class="card-grid" id="spaces-container">
+    </div>
+
+    <div id="empty-state" class="hidden text-center py-12">
+     <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+      <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+      </svg>
+     </div>
+     <p class="text-slate-500 font-medium">Nenhum espaço encontrado</p>
+     <p class="text-slate-400 text-sm mt-1">Ajuste os filtros para ver os espaços</p>
+    </div>
+   </main>
+
+   <div id="modal-booking" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0 bg-black bg-opacity-50" onclick="closeBookingModal()"></div>
+    <div class="booking-modal absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+     <div class="flex items-center justify-between mb-6">
+      <h3 class="text-2xl font-bold text-slate-800">Nova Reserva</h3>
+      <button onclick="closeBookingModal()" class="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
+       <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg>
+      </button>
+     </div>
+
+     <form id="booking-form" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Espaço</label>
+        <select id="booking-space" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+         <option value="">Selecione um espaço</option>
+        </select>
+       </div>
+       <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Sócio</label>
+        <select id="booking-socio" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+         <option value="">Selecione um sócio</option>
+        </select>
+       </div>
+      </div>
+
+      <div>
+       <label class="block text-sm font-semibold text-slate-700 mb-2">Data</label>
+       <input type="date" id="booking-date" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+      </div>
+
+      <div>
+       <label class="block text-sm font-semibold text-slate-700 mb-4">Horários Disponíveis</label>
+       <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="time-slots">
+       </div>
+      </div>
+
+      <div class="flex gap-3 pt-4">
+       <button type="button" onclick="closeBookingModal()" class="flex-1 px-6 py-3 border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors">
+        Cancelar
+       </button>
+       <button type="submit" class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors">
+        Confirmar Reserva
+       </button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <div id="modal-edit" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0 bg-black bg-opacity-50" onclick="closeEditModal()"></div>
+    <div class="booking-modal absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+     <div class="flex items-center justify-between mb-6">
+      <h3 class="text-2xl font-bold text-slate-800">Editar Espaço</h3>
+      <button onclick="closeEditModal()" class="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
+       <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg>
+      </button>
+     </div>
+
+     <form id="edit-form" class="space-y-6">
+      <div>
+       <label class="block text-sm font-semibold text-slate-700 mb-2">Nome</label>
+       <input type="text" id="edit-nome" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+      </div>
+
+      <div>
+       <label class="block text-sm font-semibold text-slate-700 mb-2">Tipo</label>
+       <select id="edit-tipo" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+        <option value="salao">Salão de Festas</option>
+        <option value="churrasqueira">Churrasqueira</option>
+        <option value="piscina">Piscina</option>
+        <option value="quadra">Quadra</option>
+       </select>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Capacidade</label>
+        <input type="number" id="edit-capacidade" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+       </div>
+       <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Preço por Hora (R$)</label>
+        <input type="number" id="edit-preco" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+       </div>
+      </div>
+
+      <div>
+       <label class="block text-sm font-semibold text-slate-700 mb-2">Descrição</label>
+       <textarea id="edit-descricao" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" rows="3" required></textarea>
+      </div>
+
+      <div class="flex gap-3 pt-4">
+       <button type="button" onclick="closeEditModal()" class="flex-1 px-6 py-3 border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors">
+        Cancelar
+       </button>
+       <button type="submit" class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors">
+        Salvar Alterações
+       </button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <div class="bg-slate-800 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
+     <span id="toast-icon">✅</span>
+     <span id="toast-message">Operação realizada com sucesso!</span>
+    </div>
+   </div>
+  </div>
+
+  <script>
+    let spaces = [
+      {
+        id: 'ESP-1',
+        nome: 'Salão de Festas Principal',
+        tipo: 'salao',
+        capacidade: 100,
+        precoHora: 150,
+        descricao: 'Salão principal com vista para o jardim',
+        imagem: '',
+        disponivel: true
+      },
+      {
+        id: 'ESP-2',
+        nome: 'Churrasqueira Coberta',
+        tipo: 'churrasqueira',
+        capacidade: 50,
+        precoHora: 80,
+        descricao: 'Área coberta com churrasqueira completa',
+        imagem: '',
+        disponivel: true
+      },
+      {
+        id: 'ESP-3',
+        nome: 'Piscina Adultos',
+        tipo: 'piscina',
+        capacidade: 30,
+        precoHora: 50,
+        descricao: 'Piscina climatizada para adultos',
+        imagem: '',
+        disponivel: false
+      },
+      {
+        id: 'ESP-4',
+        nome: 'Quadra de Tênis',
+        tipo: 'quadra',
+        capacidade: 4,
+        precoHora: 40,
+        descricao: 'Quadra profissional com iluminação',
+        imagem: '',
+        disponivel: true
+      }
+    ];
+
+    let bookings = [
+      {
+        id: 'RES-1',
+        spaceId: 'ESP-3',
+        socioId: 'SOC-1',
+        data: '2024-01-15',
+        horario: '14:00-16:00',
+        status: 'confirmada'
+      }
+    ];
+
+    let selectedTimeSlot = null;
+    let currentSpaceId = null;
+    let editingSpaceId = null;
+
+    function renderSpaces() {
+      const searchTerm = document.getElementById('search-space').value.toLowerCase();
+      const typeFilter = document.getElementById('filter-type').value;
+      const availabilityFilter = document.getElementById('filter-availability').value;
+
+      const filtered = spaces.filter(space => {
+        const matchesSearch = space.nome.toLowerCase().includes(searchTerm) || space.descricao.toLowerCase().includes(searchTerm);
+        const matchesType = !typeFilter || space.tipo === typeFilter;
+        const matchesAvailability = !availabilityFilter || (availabilityFilter === 'available' ? space.disponivel : !space.disponivel);
+        return matchesSearch && matchesType && matchesAvailability;
+      });
+
+      const container = document.getElementById('spaces-container');
+
+      if (filtered.length === 0) {
+        document.getElementById('empty-state').classList.remove('hidden');
+        container.innerHTML = '';
+        return;
+      }
+
+      document.getElementById('empty-state').classList.add('hidden');
+
+      container.innerHTML = filtered.map(space => {
+        const typeLabels = {
+          salao: '🏛️ Salão de Festas',
+          churrasqueira: '🍖 Churrasqueira',
+          piscina: '🏊 Piscina',
+          quadra: '🎾 Quadra'
+        };
+
+        const availabilityColor = space.disponivel ? '#10b981' : '#ef4444';
+        const availabilityText = space.disponivel ? 'Disponível' : 'Reservado';
+
+        return `
+          <div class="card-item">
+            <div class="space-card bg-white rounded-xl shadow-sm overflow-hidden relative">
+              <div class="space-card-content p-6 relative">
+                <div class="space-card-logo">${space.nome.charAt(0)}</div>
+                <div class="flex items-center justify-between mb-4">
+                  <div class="space-card-info">
+                    <h3>${space.nome}</h3>
+                    <p>${typeLabels[space.tipo]}</p>
+                  </div>
+                  <div class="w-12 h-12 rounded-full bg-white bg-opacity-20 flex items-center justify-center text-2xl">
+                    ${space.nome.charAt(0)}
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <p class="text-sm opacity-90">${space.descricao}</p>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="px-3 py-1 rounded-full text-xs font-semibold bg-white bg-opacity-20">Capacidade: ${space.capacidade}</span>
+                  <span style="background: ${availabilityColor}; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; color: white;">
+                    ${availabilityText}
+                  </span>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white border-opacity-20">
+                  <div class="flex items-center justify-between">
+                    <span class="text-sm opacity-90">R$ ${space.precoHora}/hora</span>
+                    <div class="flex gap-2">
+                      <button onclick="editSpace('${space.id}')" class="px-3 py-2 bg-blue-500 bg-opacity-20 text-white rounded-lg font-semibold hover:bg-opacity-30 transition-colors">
+                        Editar
+                      </button>
+                      <button onclick="bookSpace('${space.id}')" class="px-4 py-2 bg-white bg-opacity-20 text-white rounded-lg font-semibold hover:bg-opacity-30 transition-colors ${!space.disponivel ? 'opacity-50 cursor-not-allowed' : ''}" ${!space.disponivel ? 'disabled' : ''}>
+                        Reservar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openBookingModal(spaceId = null) {
+      currentSpaceId = spaceId;
+      const modal = document.getElementById('modal-booking');
+      modal.classList.remove('hidden');
+
+      // Populate space select
+      const spaceSelect = document.getElementById('booking-space');
+      spaceSelect.innerHTML = '<option value="">Selecione um espaço</option>' +
+        spaces.map(space => `<option value="${space.id}" ${spaceId === space.id ? 'selected' : ''}>${space.nome}</option>`).join('');
+
+      // Populate socio select
+      const socioSelect = document.getElementById('booking-socio');
+      socioSelect.innerHTML = '<option value="">Selecione um sócio</option>' +
+        socios.map(socio => `<option value="${socio.id}">${socio.nome} (${socio.id})</option>`).join('');
+
+      // Set default date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('booking-date').value = today;
+
+      updateTimeSlots();
+    }
+
+    function closeBookingModal() {
+      document.getElementById('modal-booking').classList.add('hidden');
+      selectedTimeSlot = null;
+      currentSpaceId = null;
+      document.getElementById('booking-form').reset();
+    }
+
+    function editSpace(spaceId) {
+      openEditModal(spaceId);
+    }
+
+    function openEditModal(spaceId) {
+      editingSpaceId = spaceId;
+      const modal = document.getElementById('modal-edit');
+      modal.classList.remove('hidden');
+
+      const space = spaces.find(s => s.id === spaceId);
+      if (space) {
+        document.getElementById('edit-nome').value = space.nome;
+        document.getElementById('edit-tipo').value = space.tipo;
+        document.getElementById('edit-capacidade').value = space.capacidade;
+        document.getElementById('edit-preco').value = space.precoHora;
+        document.getElementById('edit-descricao').value = space.descricao;
+      }
+    }
+
+    function closeEditModal() {
+      document.getElementById('modal-edit').classList.add('hidden');
+      editingSpaceId = null;
+      document.getElementById('edit-form').reset();
+    }
+
+    function updateTimeSlots() {
+      const date = document.getElementById('booking-date').value;
+      const spaceId = document.getElementById('booking-space').value;
+
+      if (!date || !spaceId) {
+        document.getElementById('time-slots').innerHTML = '<p class="col-span-full text-center text-slate-500">Selecione data e espaço</p>';
+        return;
+      }
+
+      const timeSlots = [
+        '09:00-11:00', '11:00-13:00', '14:00-16:00', '16:00-18:00', '19:00-21:00'
+      ];
+
+      const existingBookings = bookings.filter(b => b.spaceId === spaceId && b.data === date);
+
+      document.getElementById('time-slots').innerHTML = timeSlots.map(slot => {
+        const isBooked = existingBookings.some(b => b.horario === slot);
+        const isSelected = selectedTimeSlot === slot;
+
+        let classes = 'time-slot p-3 rounded-lg text-center font-medium cursor-pointer ';
+        if (isBooked) {
+          classes += 'unavailable';
+        } else if (isSelected) {
+          classes += 'selected';
+        } else {
+          classes += 'available';
+        }
+
+        return `
+          <div class="${classes}" onclick="${isBooked ? '' : `selectTimeSlot('${slot}')`}">
+            ${slot}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectTimeSlot(slot) {
+      selectedTimeSlot = slot;
+      updateTimeSlots();
+    }
+
+    function bookSpace(spaceId) {
+      openBookingModal(spaceId);
+    }
+
+    function showToast(message, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = message;
+      document.getElementById('toast-icon').textContent = icon;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    // Event listeners
+    document.getElementById('search-space').addEventListener('input', renderSpaces);
+    document.getElementById('filter-type').addEventListener('change', renderSpaces);
+    document.getElementById('filter-availability').addEventListener('change', renderSpaces);
+
+    document.getElementById('booking-space').addEventListener('change', updateTimeSlots);
+    document.getElementById('booking-date').addEventListener('change', updateTimeSlots);
+
+    document.getElementById('booking-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const spaceId = document.getElementById('booking-space').value;
+      const socioId = document.getElementById('booking-socio').value;
+      const date = document.getElementById('booking-date').value;
+
+      if (!spaceId || !socioId || !date || !selectedTimeSlot) {
+        showToast('Preencha todos os campos', '⚠️');
+        return;
+      }
+
+      // Add booking
+      const newBooking = {
+        id: 'RES-' + (bookings.length + 1),
+        spaceId,
+        socioId,
+        data: date,
+        horario: selectedTimeSlot,
+        status: 'confirmada'
+      };
+
+      bookings.push(newBooking);
+
+      // Update space availability if needed
+      const space = spaces.find(s => s.id === spaceId);
+      if (space) {
+        space.disponivel = false;
+      }
+
+      showToast('Reserva confirmada com sucesso!');
+      closeBookingModal();
+      renderSpaces();
+    });
+
+    document.getElementById('edit-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const nome = document.getElementById('edit-nome').value;
+      const tipo = document.getElementById('edit-tipo').value;
+      const capacidade = parseInt(document.getElementById('edit-capacidade').value);
+      const precoHora = parseFloat(document.getElementById('edit-preco').value);
+      const descricao = document.getElementById('edit-descricao').value;
+
+      if (!nome || !tipo || isNaN(capacidade) || isNaN(precoHora) || !descricao) {
+        showToast('Preencha todos os campos corretamente', '⚠️');
+        return;
+      }
+
+      const space = spaces.find(s => s.id === editingSpaceId);
+      if (space) {
+        space.nome = nome;
+        space.tipo = tipo;
+        space.capacidade = capacidade;
+        space.precoHora = precoHora;
+        space.descricao = descricao;
+      }
+
+      showToast('Espaço atualizado com sucesso!');
+      closeEditModal();
+      renderSpaces();
+    });
+
+    // Initialize
+    renderSpaces();
+  </script>
+  <script src="menu-loader.js"></script>
+ </body>
+</html>

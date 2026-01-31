@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Sistema de Gestão de Sócios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .stat-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+  </style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="menu-container"></div>
+  <div id="app" class="h-full overflow-auto">
+
+   <main class="ml-64 p-8">
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-slate-500 text-sm font-medium">Total de Sócios</p>
+        <p class="text-3xl font-bold text-slate-800" id="total-socios">0</p>
+       </div>
+       <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-slate-500 text-sm font-medium">Mensalidades em Dia</p>
+        <p class="text-3xl font-bold text-slate-800" id="mensalidades-dia">0</p>
+       </div>
+       <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-slate-500 text-sm font-medium">Receita Mensal</p>
+        <p class="text-3xl font-bold text-slate-800" id="receita-mensal">R$ 0,00</p>
+       </div>
+       <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-slate-500 text-sm font-medium">Agendamentos Hoje</p>
+        <p class="text-3xl font-bold text-slate-800" id="agendamentos-hoje">0</p>
+       </div>
+       <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+        </svg>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+     <div class="bg-white p-6 rounded-xl shadow-sm">
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Atividades Recentes</h3>
+      <div class="space-y-4" id="recent-activities">
+       <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center">
+         <svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+         </svg>
+        </div>
+        <div>
+         <p class="text-sm font-medium text-slate-800">Novo sócio cadastrado</p>
+         <p class="text-xs text-slate-500">João Silva - há 2 horas</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+         </svg>
+        </div>
+        <div>
+         <p class="text-sm font-medium text-slate-800">Pagamento recebido</p>
+         <p class="text-xs text-slate-500">Maria Santos - R$ 150,00 - há 4 horas</p>
+        </div>
+       </div>
+       <div class="flex items-center gap-3">
+        <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+         <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+         </svg>
+        </div>
+        <div>
+         <p class="text-sm font-medium text-slate-800">Novo agendamento</p>
+         <p class="text-xs text-slate-500">Salão de Festas - há 6 horas</p>
+        </div>
+       </div>
+      </div>
+     </div>
+
+     <div class="bg-white p-6 rounded-xl shadow-sm">
+      <h3 class="text-lg font-semibold text-slate-800 mb-4">Status dos Planos</h3>
+      <div class="space-y-4" id="planos-status">
+       <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+         <div class="w-3 h-3 bg-emerald-500 rounded-full"></div>
+         <span class="text-sm font-medium text-slate-700">Básico</span>
+        </div>
+        <span class="text-sm text-slate-500">45 sócios</span>
+       </div>
+       <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+         <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+         <span class="text-sm font-medium text-slate-700">Premium</span>
+        </div>
+        <span class="text-sm text-slate-500">23 sócios</span>
+       </div>
+       <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+         <div class="w-3 h-3 bg-purple-500 rounded-full"></div>
+         <span class="text-sm font-medium text-slate-700">VIP</span>
+        </div>
+        <span class="text-sm text-slate-500">12 sócios</span>
+       </div>
+      </div>
+     </div>
+    </div>
+   </main>
+  </div>
+
+  <script>
+    // Mock data for demo
+    const mockData = {
+      socios: [
+        { id: 1, nome: 'João Silva', plano: 'Básico', status: 'Ativo' },
+        { id: 2, nome: 'Maria Santos', plano: 'Premium', status: 'Ativo' },
+        { id: 3, nome: 'Pedro Oliveira', plano: 'VIP', status: 'Ativo' },
+        { id: 4, nome: 'Ana Costa', plano: 'Básico', status: 'Inativo' },
+        { id: 5, nome: 'Carlos Ferreira', plano: 'Premium', status: 'Ativo' }
+      ],
+      pagamentos: [
+        { id: 1, socio: 'João Silva', valor: 100, status: 'Pago', mes: 'Janeiro' },
+        { id: 2, socio: 'Maria Santos', valor: 150, status: 'Pago', mes: 'Janeiro' },
+        { id: 3, socio: 'Pedro Oliveira', valor: 200, status: 'Pendente', mes: 'Janeiro' }
+      ],
+      agendamentos: [
+        { id: 1, espaco: 'Salão de Festas', data: new Date().toISOString().split('T')[0], status: 'Confirmado' },
+        { id: 2, espaco: 'Quadra de Tênis', data: new Date().toISOString().split('T')[0], status: 'Pendente' }
+      ]
+    };
+
+    function updateDashboard() {
+      // Update stats
+      document.getElementById('total-socios').textContent = mockData.socios.length;
+      document.getElementById('mensalidades-dia').textContent = mockData.pagamentos.filter(p => p.status === 'Pago').length;
+      document.getElementById('receita-mensal').textContent = 'R$ ' + mockData.pagamentos.filter(p => p.status === 'Pago').reduce((sum, p) => sum + p.valor, 0).toFixed(2).replace('.', ',');
+      document.getElementById('agendamentos-hoje').textContent = mockData.agendamentos.filter(a => a.data === new Date().toISOString().split('T')[0]).length;
+    }
+
+    // Initialize
+    updateDashboard();
+  </script>
+
+  <script src="menu-loader.js"></script>
+ </body>
+</html>

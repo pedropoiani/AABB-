@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Validação de Carteirinha - Clube Social</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .validation-card {
+      background: white;
+      border-radius: 2rem;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+      overflow: hidden;
+      max-width: 400px;
+      width: 90%;
+      margin: 2rem auto;
+    }
+
+    .card-header {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 2rem;
+      text-align: center;
+      position: relative;
+    }
+
+    .card-header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="80" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="60" cy="40" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+      opacity: 0.3;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-active {
+      background: rgba(16, 185, 129, 0.9);
+      color: white;
+    }
+
+    .status-inactive {
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+    }
+
+    .status-pending {
+      background: rgba(245, 158, 11, 0.9);
+      color: white;
+    }
+
+    .member-photo {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid white;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 3rem;
+      font-weight: bold;
+      color: #6b7280;
+      background: #f3f4f6;
+    }
+
+    .member-info {
+      padding: 2rem;
+    }
+
+    .info-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+      border-bottom: 1px solid #f3f4f6;
+    }
+
+    .info-item:last-child {
+      border-bottom: none;
+    }
+
+    .info-label {
+      font-weight: 600;
+      color: #374151;
+      font-size: 0.875rem;
+    }
+
+    .info-value {
+      color: #6b7280;
+      text-align: right;
+    }
+
+    .payment-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-top: 1rem;
+    }
+
+    .payment-ok {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    .payment-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .dependents-section {
+      margin-top: 2rem;
+      padding-top: 2rem;
+      border-top: 1px solid #f3f4f6;
+    }
+
+    .dependents-section h4 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .dependent-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .dependent-name {
+      font-weight: 600;
+      color: #374151;
+    }
+
+    .dependent-relation {
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .club-logo {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 3rem;
+      height: 3rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: bold;
+    }
+
+    .validation-time {
+      text-align: center;
+      margin-top: 2rem;
+      padding: 1rem;
+      background: #f9fafb;
+      border-radius: 0.5rem;
+      font-size: 0.875rem;
+      color: #6b7280;
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .fade-in {
+      animation: fadeIn 0.5s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+ </head>
+ <body class="flex items-center justify-center p-4">
+  <div id="loading-screen" class="fixed inset-0 bg-white bg-opacity-95 flex items-center justify-center z-50">
+   <div class="text-center">
+    <div class="loading-spinner mx-auto mb-4"></div>
+    <h2 class="text-xl font-bold text-slate-800 mb-2">Validando Carteirinha</h2>
+    <p class="text-slate-600">Aguarde enquanto verificamos os dados...</p>
+   </div>
+  </div>
+
+  <div id="validation-card" class="validation-card fade-in" style="display: none;">
+   <div class="card-header relative">
+    <div class="club-logo">CS</div>
+    <h1 class="text-2xl font-bold mb-2">Clube Social</h1>
+    <p class="text-white/80">Carteirinha Digital Validada</p>
+    <div class="mt-4">
+     <div id="status-badge" class="status-badge status-active">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+      </svg>
+      <span id="status-text">ATIVO</span>
+     </div>
+    </div>
+   </div>
+
+   <div class="member-info">
+    <div class="member-photo" id="member-photo">
+     <span id="member-initials">JS</span>
+    </div>
+
+    <div class="text-center mb-6">
+     <h2 class="text-2xl font-bold text-slate-800" id="member-name">João Silva</h2>
+     <p class="text-slate-600" id="member-id">SOC-1</p>
+    </div>
+
+    <div class="space-y-1">
+     <div class="info-item">
+      <span class="info-label">Plano</span>
+      <span class="info-value" id="member-plano">Básico</span>
+     </div>
+     <div class="info-item">
+      <span class="info-label">Data de Adesão</span>
+      <span class="info-value" id="member-adesao">01/01/2024</span>
+     </div>
+     <div class="info-item">
+      <span class="info-label">Válido até</span>
+      <span class="info-value" id="member-validade">31/12/2024</span>
+     </div>
+    </div>
+
+    <div id="payment-status" class="payment-status payment-ok">
+     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+     </svg>
+     <span>Pagamento em Dia</span>
+    </div>
+
+    <div id="dependents-section" class="dependents-section">
+     <h4>
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+      </svg>
+      Dependentes
+     </h4>
+     <div id="dependents-list">
+      <div class="dependent-item">
+       <div>
+        <div class="dependent-name">Maria Silva</div>
+        <div class="dependent-relation">Esposa</div>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <div class="validation-time">
+     <div class="flex items-center justify-center gap-2">
+      <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span>Validado em <span id="validation-time">30/01/2026 14:30</span></span>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <script>
+    // Mock data - in a real app, this would come from a database/API
+    const mockSocios = {
+      'SOC-1': {
+        id: 'SOC-1',
+        nome: 'João Silva',
+        email: 'joao@email.com',
+        telefone: '(11) 99999-9999',
+        dataNascimento: '1990-01-15',
+        plano: 'basico',
+        status: 'ativo',
+        foto: '',
+        dataAdesao: '2024-01-01T00:00:00.000Z',
+        validade: '2024-12-31T00:00:00.000Z',
+        pagamentoOk: true,
+        dependentes: [
+          { nome: 'Maria Silva', relacao: 'Esposa' }
+        ]
+      },
+      'SOC-2': {
+        id: 'SOC-2',
+        nome: 'Pedro Oliveira',
+        email: 'pedro@email.com',
+        telefone: '(11) 88888-8888',
+        dataNascimento: '1992-08-10',
+        plano: 'vip',
+        status: 'ativo',
+        foto: '',
+        dataAdesao: '2024-01-01T00:00:00.000Z',
+        validade: '2024-12-31T00:00:00.000Z',
+        pagamentoOk: true,
+        dependentes: []
+      },
+      'SOC-3': {
+        id: 'SOC-3',
+        nome: 'Ana Santos',
+        email: 'ana@email.com',
+        telefone: '(11) 77777-7777',
+        dataNascimento: '1985-03-20',
+        plano: 'premium',
+        status: 'pendente',
+        foto: '',
+        dataAdesao: '2024-01-15T00:00:00.000Z',
+        validade: '2024-12-31T00:00:00.000Z',
+        pagamentoOk: false,
+        dependentes: [
+          { nome: 'Carlos Santos', relacao: 'Filho' },
+          { nome: 'Julia Santos', relacao: 'Filha' }
+        ]
+      },
+      'SOC-4': {
+        id: 'SOC-4',
+        nome: 'Roberto Costa',
+        email: 'roberto@email.com',
+        telefone: '(11) 66666-6666',
+        dataNascimento: '1978-11-05',
+        plano: 'basico',
+        status: 'inativo',
+        foto: '',
+        dataAdesao: '2023-06-01T00:00:00.000Z',
+        validade: '2024-12-31T00:00:00.000Z',
+        pagamentoOk: false,
+        dependentes: [
+          { nome: 'Sandra Costa', relacao: 'Esposa' },
+          { nome: 'Lucas Costa', relacao: 'Filho' },
+          { nome: 'Beatriz Costa', relacao: 'Filha' }
+        ]
+      }
+    };
+
+    function getSocioFromURL() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const socioId = urlParams.get('id');
+
+      if (!socioId || !mockSocios[socioId]) {
+        // Default to SOC-1 for demo purposes
+        return mockSocios['SOC-1'];
+      }
+
+      return mockSocios[socioId];
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    }
+
+    function getInitials(name) {
+      return name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+    }
+
+    function renderSocioData(socio) {
+      // Update status badge
+      const statusBadge = document.getElementById('status-badge');
+      const statusText = document.getElementById('status-text');
+
+      statusBadge.className = 'status-badge';
+      if (socio.status === 'ativo') {
+        statusBadge.classList.add('status-active');
+        statusText.textContent = 'ATIVO';
+      } else if (socio.status === 'pendente') {
+        statusBadge.classList.add('status-pending');
+        statusText.textContent = 'PENDENTE';
+      } else {
+        statusBadge.classList.add('status-inactive');
+        statusText.textContent = 'INATIVO';
+      }
+
+      // Update member info
+      document.getElementById('member-name').textContent = socio.nome;
+      document.getElementById('member-id').textContent = socio.id;
+      document.getElementById('member-initials').textContent = getInitials(socio.nome);
+
+      // Update plan
+      const planoLabels = {
+        basico: 'Básico',
+        premium: 'Premium',
+        vip: 'VIP'
+      };
+      document.getElementById('member-plano').textContent = planoLabels[socio.plano] || socio.plano;
+
+      // Update dates
+      document.getElementById('member-adesao').textContent = formatDate(socio.dataAdesao);
+      document.getElementById('member-validade').textContent = formatDate(socio.validade);
+
+      // Update payment status
+      const paymentStatus = document.getElementById('payment-status');
+      if (socio.pagamentoOk) {
+        paymentStatus.className = 'payment-status payment-ok';
+        paymentStatus.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>Pagamento em Dia</span>
+        `;
+      } else {
+        paymentStatus.className = 'payment-status payment-pending';
+        paymentStatus.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+          <span>Pagamento Pendente</span>
+        `;
+      }
+
+      // Update dependents
+      const dependentsList = document.getElementById('dependents-list');
+      const dependentsSection = document.getElementById('dependents-section');
+
+      if (socio.dependentes && socio.dependentes.length > 0) {
+        dependentsList.innerHTML = socio.dependentes.map(dep => `
+          <div class="dependent-item">
+           <div>
+            <div class="dependent-name">${dep.nome}</div>
+            <div class="dependent-relation">${dep.relacao}</div>
+           </div>
+          </div>
+        `).join('');
+        dependentsSection.style.display = 'block';
+      } else {
+        dependentsSection.style.display = 'none';
+      }
+
+      // Update validation time
+      const now = new Date();
+      document.getElementById('validation-time').textContent =
+        now.toLocaleDateString('pt-BR') + ' ' + now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function showValidationCard() {
+      setTimeout(() => {
+        document.getElementById('loading-screen').style.display = 'none';
+        document.getElementById('validation-card').style.display = 'block';
+      }, 2000); // Simulate loading time
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      const socio = getSocioFromURL();
+      renderSocioData(socio);
+      showValidationCard();
+    });
+  </script>
+ </body>
+</html>

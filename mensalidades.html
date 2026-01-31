@@ -1,0 +1,1406 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mensalidades - Sistema de Gestão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .stat-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .payment-row {
+      transition: background-color 0.2s ease;
+    }
+
+    .payment-row:hover {
+      background-color: #f8fafc;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .status-pago {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-pendente {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-atrasado {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .modal-backdrop {
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+    }
+
+    .progress-bar {
+      background: #e5e7eb;
+      border-radius: 9999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #10b981, #059669);
+      transition: width 0.3s ease;
+    }
+
+    .card-metric {
+      padding: 1rem;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+
+    .card-metric.green {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .card-metric.red {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .card-metric.yellow {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .filter-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .tab-content {
+      display: block;
+    }
+
+    .tab-content.hidden {
+      display: none;
+    }
+  </style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="menu-container"></div>
+  <div id="app" class="h-full overflow-auto">
+   <main class="ml-64 p-8">
+    <header class="mb-8">
+     <div class="flex items-center justify-between">
+      <div>
+       <h2 class="text-3xl font-bold text-slate-800">Controle de Mensalidades</h2>
+       <p class="text-slate-500 mt-1">Gerencie os pagamentos dos sócios</p>
+      </div>
+      <button onclick="openPaymentModal()" class="btn-primary flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+       </svg> Registrar Pagamento
+      </button>
+     </div>
+    </header>
+
+    <!-- Abas -->
+    <div class="bg-white rounded-xl p-1 shadow-sm mb-6">
+     <div class="flex">
+      <button onclick="switchTab('content-historico', event)" id="tab-historico" class="flex-1 px-6 py-3 rounded-lg font-semibold transition-colors text-slate-600 hover:bg-slate-50">
+       📋 Histórico de Pagamentos
+      </button>
+      <button onclick="switchTab('content-debitos', event)" id="tab-debitos" class="flex-1 px-6 py-3 rounded-lg font-semibold transition-colors bg-blue-500 text-white">
+       🔄 Débitos Automáticos
+      </button>
+     </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-slate-500 text-sm font-medium">Total Esperado</p>
+        <p id="stat-total-esperado" class="text-3xl font-bold text-slate-800 mt-1">R$ 0,00</p>
+       </div>
+       <div class="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center">
+        <svg class="w-7 h-7 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-slate-500 text-sm font-medium">Total Recebido</p>
+        <p id="stat-total-recebido" class="text-3xl font-bold text-emerald-600 mt-1">R$ 0,00</p>
+       </div>
+       <div class="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center">
+        <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-slate-500 text-sm font-medium">Total em Atraso</p>
+        <p id="stat-total-atrasado" class="text-3xl font-bold text-red-600 mt-1">R$ 0,00</p>
+       </div>
+       <div class="w-14 h-14 rounded-2xl bg-red-100 flex items-center justify-center">
+        <svg class="w-7 h-7 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4v2m0 5v2m0-13H8a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-4m0 0H8m4 0V5a2 2 0 00-2-2h-2a2 2 0 00-2 2v2m0 0V3m0 2v4m0 0h4" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-slate-500 text-sm font-medium">Taxa de Cobrança</p>
+        <p id="stat-taxa-cobranca" class="text-3xl font-bold text-slate-800 mt-1">0%</p>
+       </div>
+       <div class="w-14 h-14 rounded-2xl bg-purple-100 flex items-center justify-center">
+        <svg class="w-7 h-7 text-purple-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+    </div>
+
+<!-- Conteúdo das Abas -->
+    <div id="content-historico" class="tab-content">
+     <div class="bg-white rounded-xl p-6 shadow-sm mb-6">
+      <div class="filter-group">
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Buscar Sócio</label>
+        <input type="text" id="search-socio" placeholder="Nome ou ID..." class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Mês</label>
+        <select id="filter-mes" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+         <option value="">Todos os meses</option>
+         <option value="01">Janeiro</option>
+         <option value="02">Fevereiro</option>
+         <option value="03">Março</option>
+         <option value="04">Abril</option>
+         <option value="05">Maio</option>
+         <option value="06">Junho</option>
+         <option value="07">Julho</option>
+         <option value="08">Agosto</option>
+         <option value="09">Setembro</option>
+         <option value="10">Outubro</option>
+         <option value="11">Novembro</option>
+         <option value="12">Dezembro</option>
+        </select>
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
+        <select id="filter-status" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+         <option value="">Todos</option>
+         <option value="pago">Pagos</option>
+         <option value="pendente">Pendentes</option>
+         <option value="atrasado">Atrasados</option>
+        </select>
+       </div>
+       <div class="pt-7">
+        <button onclick="clearFilters()" class="px-4 py-3 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 transition-colors">Limpar</button>
+      </div>
+     </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+     <div class="px-6 py-4 border-b border-slate-100">
+      <h3 class="font-bold text-slate-800 text-lg">Histórico de Mensalidades</h3>
+     </div>
+     <div class="overflow-x-auto">
+      <table class="w-full">
+       <thead class="bg-slate-50">
+        <tr>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Sócio</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Plano</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mês/Ano</th>
+         <th class="text-right px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Pagamento</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Método</th>
+         <th class="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ações</th>
+        </tr>
+       </thead>
+       <tbody id="payments-table-body" class="divide-y divide-slate-100">
+       </tbody>
+      </table>
+     </div>
+    </div>
+
+    <div id="content-debitos" class="tab-content">
+     <div class="bg-white rounded-xl p-6 shadow-sm mb-6">
+      <div class="flex items-center justify-between mb-6">
+       <div>
+        <h3 class="font-bold text-slate-800 text-lg">Débitos Automáticos Pendentes</h3>
+        <p class="text-slate-500 text-sm mt-1">Confirme ou rejeite os pagamentos processados automaticamente</p>
+       </div>
+       <div class="flex gap-3">
+        <button onclick="selectAllDebitos()" class="px-4 py-2 border border-slate-200 text-slate-600 rounded-lg font-semibold hover:bg-slate-50 transition-colors">
+         Selecionar Todos
+        </button>
+        <button onclick="confirmarLote()" id="btn-confirmar-lote" class="px-4 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+         ✅ Confirmar Débitos
+        </button>
+        <button onclick="rejeitarLote()" id="btn-rejeitar-lote" class="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+         ❌ Rejeitar Selecionados
+        </button>
+       </div>
+      </div>
+
+      <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+       <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+         <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+         </svg>
+        </div>
+        <div>
+         <p class="font-semibold text-amber-800">Atenção</p>
+         <p class="text-amber-700 text-sm">Revise cada débito automático antes de confirmar. Pagamentos rejeitados voltarão ao status pendente.</p>
+        </div>
+       </div>
+      </div>
+
+      <div class="overflow-x-auto">
+       <table class="w-full">
+        <thead class="bg-slate-50">
+         <tr>
+          <th class="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+           <input type="checkbox" id="select-all-debitos" class="w-4 h-4 text-emerald-600 bg-slate-100 border-slate-300 rounded focus:ring-emerald-500">
+          </th>
+          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Sócio</th>
+          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Plano</th>
+          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Mês/Ano</th>
+          <th class="text-right px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Valor</th>
+          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Processado em</th>
+          <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+          <th class="text-center px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Ações</th>
+         </tr>
+        </thead>
+        <tbody id="debitos-table-body" class="divide-y divide-slate-100">
+        </tbody>
+       </table>
+      </div>
+     </div>
+    </div>
+
+   <div id="modal-payment" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closePaymentModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 max-h-[90%] overflow-y-auto">
+     <div class="flex items-center justify-between mb-6">
+      <h3 id="modal-payment-title" class="text-2xl font-bold text-slate-800">Registrar Pagamento</h3>
+      <button onclick="closePaymentModal()" class="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
+       <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg>
+      </button>
+     </div>
+     <form id="form-payment" class="space-y-5">
+      <input type="hidden" id="payment-id">
+      <div>
+       <label for="payment-socio" class="block text-sm font-semibold text-slate-700 mb-2">Sócio *</label>
+       <select id="payment-socio" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+        <option value="">Selecione um sócio...</option>
+       </select>
+      </div>
+      <div id="socio-info" class="hidden bg-slate-50 p-4 rounded-xl">
+       <p class="text-sm text-slate-600"><strong>Plano:</strong> <span id="info-plano"></span></p>
+       <p class="text-sm text-slate-600 mt-2"><strong>Valor da Mensalidade:</strong> <span id="info-valor"></span></p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+       <div>
+        <label for="payment-mes" class="block text-sm font-semibold text-slate-700 mb-2">Mês *</label>
+        <select id="payment-mes" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+         <option value="">Selecione...</option>
+         <option value="01">Janeiro</option>
+         <option value="02">Fevereiro</option>
+         <option value="03">Março</option>
+         <option value="04">Abril</option>
+         <option value="05">Maio</option>
+         <option value="06">Junho</option>
+         <option value="07">Julho</option>
+         <option value="08">Agosto</option>
+         <option value="09">Setembro</option>
+         <option value="10">Outubro</option>
+         <option value="11">Novembro</option>
+         <option value="12">Dezembro</option>
+        </select>
+       </div>
+       <div>
+        <label for="payment-ano" class="block text-sm font-semibold text-slate-700 mb-2">Ano *</label>
+        <select id="payment-ano" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+         <option value="">Selecione...</option>
+         <option value="2024">2024</option>
+         <option value="2025">2025</option>
+         <option value="2026">2026</option>
+        </select>
+       </div>
+      </div>
+      <div>
+       <label for="payment-valor" class="block text-sm font-semibold text-slate-700 mb-2">Valor Pago *</label>
+       <div class="relative">
+        <span class="absolute left-4 top-3 text-slate-500 font-semibold">R$</span>
+        <input type="number" id="payment-valor" required step="0.01" min="0" class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all" placeholder="0,00">
+       </div>
+      </div>
+      <div>
+       <label for="payment-data" class="block text-sm font-semibold text-slate-700 mb-2">Data do Pagamento *</label>
+       <input type="date" id="payment-data" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all">
+      </div>
+      <div>
+       <label for="payment-metodo" class="block text-sm font-semibold text-slate-700 mb-2">Método de Pagamento *</label>
+       <select id="payment-metodo" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+        <option value="">Selecione...</option>
+        <option value="dinheiro">Dinheiro</option>
+        <option value="cheque">Cheque</option>
+        <option value="credito">Cartão de Crédito</option>
+        <option value="debito">Cartão de Débito</option>
+        <option value="transferencia">Transferência Bancária</option>
+        <option value="pix">PIX</option>
+       </select>
+      </div>
+      <div>
+       <label for="payment-status" class="block text-sm font-semibold text-slate-700 mb-2">Status *</label>
+       <select id="payment-status" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+        <option value="pago">Pago</option>
+        <option value="pendente">Pendente</option>
+        <option value="atrasado">Atrasado</option>
+       </select>
+      </div>
+      <div class="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
+       <input type="checkbox" id="payment-debito-automatico" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500">
+       <label for="payment-debito-automatico" class="text-sm font-semibold text-blue-800 cursor-pointer">
+        Registrar como débito automático mensal
+       </label>
+      </div>
+      <div class="flex gap-3 pt-4">
+       <button type="button" onclick="closePaymentModal()" class="flex-1 px-6 py-3 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 transition-colors">Cancelar</button>
+       <button type="submit" id="btn-salvar-payment" class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/30">Registrar Pagamento</button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <div id="modal-delete" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDeleteModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+     <div class="text-center">
+      <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+       <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+       </svg>
+      </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-2">Confirmar Exclusão</h3>
+      <p class="text-slate-500 mb-6">Tem certeza que deseja excluir este registro de pagamento?</p>
+      <div class="flex gap-3">
+       <button onclick="closeDeleteModal()" class="flex-1 px-6 py-3 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 transition-colors">Cancelar</button>
+       <button id="btn-confirm-delete" onclick="deletePayment()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">Excluir</button>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <div id="modal-debito" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDebitoModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 max-h-[90%] overflow-y-auto">
+     <div class="flex items-center justify-between mb-6">
+      <h3 id="modal-debito-title" class="text-2xl font-bold text-slate-800">Editar Débito Automático</h3>
+      <button onclick="closeDebitoModal()" class="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
+       <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg>
+      </button>
+     </div>
+     <form id="form-debito" class="space-y-5">
+      <input type="hidden" id="debito-id">
+      <div>
+       <label for="debito-socio" class="block text-sm font-semibold text-slate-700 mb-2">Sócio</label>
+       <input type="text" id="debito-socio" readonly class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-slate-600">
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+       <div>
+        <label for="debito-mes" class="block text-sm font-semibold text-slate-700 mb-2">Mês *</label>
+        <select id="debito-mes" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+         <option value="">Selecione...</option>
+         <option value="01">Janeiro</option>
+         <option value="02">Fevereiro</option>
+         <option value="03">Março</option>
+         <option value="04">Abril</option>
+         <option value="05">Maio</option>
+         <option value="06">Junho</option>
+         <option value="07">Julho</option>
+         <option value="08">Agosto</option>
+         <option value="09">Setembro</option>
+         <option value="10">Outubro</option>
+         <option value="11">Novembro</option>
+         <option value="12">Dezembro</option>
+        </select>
+       </div>
+       <div>
+        <label for="debito-ano" class="block text-sm font-semibold text-slate-700 mb-2">Ano *</label>
+        <select id="debito-ano" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+         <option value="">Selecione...</option>
+         <option value="2024">2024</option>
+         <option value="2025">2025</option>
+         <option value="2026">2026</option>
+        </select>
+       </div>
+      </div>
+      <div>
+       <label for="debito-valor" class="block text-sm font-semibold text-slate-700 mb-2">Valor *</label>
+       <div class="relative">
+        <span class="absolute left-4 top-3 text-slate-500 font-semibold">R$</span>
+        <input type="number" id="debito-valor" required step="0.01" min="0" class="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all" placeholder="0,00">
+       </div>
+      </div>
+      <div>
+       <label for="debito-status" class="block text-sm font-semibold text-slate-700 mb-2">Status *</label>
+       <select id="debito-status" required class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white">
+        <option value="pendente">Pendente</option>
+        <option value="processado">Processado</option>
+        <option value="falhou">Falhou</option>
+       </select>
+      </div>
+      <div class="flex gap-3 pt-4">
+       <button type="button" onclick="closeDebitoModal()" class="flex-1 px-6 py-3 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 transition-colors">Cancelar</button>
+       <button type="submit" id="btn-salvar-debito" class="flex-1 px-6 py-3 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/30">Salvar Débito</button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <div id="modal-delete-debito" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0" onclick="closeDeleteDebitoModal()"></div>
+    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white rounded-2xl shadow-2xl p-8">
+     <div class="text-center">
+      <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
+       <svg class="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+       </svg>
+      </div>
+      <h3 class="text-xl font-bold text-slate-800 mb-2">Confirmar Exclusão</h3>
+      <p class="text-slate-500 mb-6">Tem certeza que deseja excluir este débito automático?</p>
+      <div class="flex gap-3">
+       <button onclick="closeDeleteDebitoModal()" class="flex-1 px-6 py-3 border border-slate-200 text-slate-600 rounded-xl font-semibold hover:bg-slate-50 transition-colors">Cancelar</button>
+       <button id="btn-confirm-delete-debito" onclick="deleteDebito()" class="flex-1 px-6 py-3 bg-red-600 text-white rounded-xl font-semibold hover:bg-red-700 transition-colors">Excluir</button>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+
+  <script>
+    const precosPlanos = {
+      basico: 50.00,
+      premium: 100.00,
+      vip: 200.00
+    };
+
+    let socios = [
+      { id: 'SOC-1', nome: 'João Silva', plano: 'basico' },
+      { id: 'SOC-2', nome: 'Maria Santos', plano: 'premium' },
+      { id: 'SOC-3', nome: 'Pedro Oliveira', plano: 'vip' },
+      { id: 'SOC-4', nome: 'Ana Costa', plano: 'premium' },
+      { id: 'SOC-5', nome: 'Carlos Mendes', plano: 'basico' },
+      { id: 'SOC-6', nome: 'Fernanda Lima', plano: 'premium' },
+      { id: 'SOC-7', nome: 'Roberto Alves', plano: 'vip' },
+      { id: 'SOC-8', nome: 'Juliana Pereira', plano: 'basico' },
+      { id: 'SOC-9', nome: 'Marcos Silva', plano: 'premium' },
+      { id: 'SOC-10', nome: 'Luciana Rocha', plano: 'vip' },
+      { id: 'SOC-11', nome: 'André Cardoso', plano: 'basico' },
+      { id: 'SOC-12', nome: 'Camila Fernandes', plano: 'premium' },
+      { id: 'SOC-13', nome: 'Diego Martins', plano: 'vip' },
+      { id: 'SOC-14', nome: 'Patrícia Gomes', plano: 'basico' },
+      { id: 'SOC-15', nome: 'Rafael Souza', plano: 'premium' },
+      { id: 'SOC-16', nome: 'Sabrina Castro', plano: 'vip' },
+      { id: 'SOC-17', nome: 'Thiago Barbosa', plano: 'basico' },
+      { id: 'SOC-18', nome: 'Vanessa Ribeiro', plano: 'premium' },
+      { id: 'SOC-19', nome: 'Wagner Santos', plano: 'vip' },
+      { id: 'SOC-20', nome: 'Yasmin Oliveira', plano: 'basico' }
+    ];
+
+    let pagamentos = [
+      {
+        id: 'PAY-1',
+        socioId: 'SOC-1',
+        socioNome: 'João Silva',
+        plano: 'basico',
+        mes: '01',
+        ano: '2024',
+        valor: 50.00,
+        status: 'pago',
+        dataPagamento: '2024-01-15',
+        metodo: 'pix'
+      },
+      {
+        id: 'PAY-2',
+        socioId: 'SOC-2',
+        socioNome: 'Maria Santos',
+        plano: 'premium',
+        mes: '01',
+        ano: '2024',
+        valor: 100.00,
+        status: 'pago',
+        dataPagamento: '2024-01-20',
+        metodo: 'credito'
+      },
+      {
+        id: 'PAY-3',
+        socioId: 'SOC-3',
+        socioNome: 'Pedro Oliveira',
+        plano: 'vip',
+        mes: '01',
+        ano: '2024',
+        valor: 200.00,
+        status: 'pendente',
+        dataPagamento: null,
+        metodo: null
+      }
+    ];
+
+    let debitosAutomaticos = [
+      {
+        id: 'DEB-1',
+        socioId: 'SOC-1',
+        socioNome: 'João Silva',
+        plano: 'basico',
+        mes: '01',
+        ano: '2026',
+        valor: 50.00,
+        dataProcessamento: '2026-01-15T10:30:00',
+        status: 'processado',
+        selected: false
+      },
+      {
+        id: 'DEB-2',
+        socioId: 'SOC-2',
+        socioNome: 'Maria Santos',
+        plano: 'premium',
+        mes: '01',
+        ano: '2026',
+        valor: 100.00,
+        dataProcessamento: '2026-01-15T10:35:00',
+        status: 'processado',
+        selected: false
+      },
+      {
+        id: 'DEB-3',
+        socioId: 'SOC-3',
+        socioNome: 'Pedro Oliveira',
+        plano: 'vip',
+        mes: '01',
+        ano: '2026',
+        valor: 200.00,
+        dataProcessamento: '2026-01-15T10:40:00',
+        status: 'pendente',
+        selected: false
+      },
+      {
+        id: 'DEB-4',
+        socioId: 'SOC-4',
+        socioNome: 'Ana Costa',
+        plano: 'premium',
+        mes: '01',
+        ano: '2026',
+        valor: 100.00,
+        dataProcessamento: '2026-01-15T10:45:00',
+        status: 'pendente',
+        selected: false
+      },
+      {
+        id: 'DEB-5',
+        socioId: 'SOC-5',
+        socioNome: 'Carlos Mendes',
+        plano: 'basico',
+        mes: '01',
+        ano: '2026',
+        valor: 50.00,
+        dataProcessamento: '2026-01-15T10:50:00',
+        status: 'falhou',
+        selected: false
+      },
+      {
+        id: 'DEB-6',
+        socioId: 'SOC-6',
+        socioNome: 'Fernanda Lima',
+        plano: 'premium',
+        mes: '12',
+        ano: '2025',
+        valor: 100.00,
+        dataProcessamento: '2025-12-20T14:15:00',
+        status: 'processado',
+        selected: false
+      },
+      {
+        id: 'DEB-7',
+        socioId: 'SOC-7',
+        socioNome: 'Roberto Alves',
+        plano: 'vip',
+        mes: '12',
+        ano: '2025',
+        valor: 200.00,
+        dataProcessamento: '2025-12-20T14:20:00',
+        status: 'pendente',
+        selected: false
+      },
+      {
+        id: 'DEB-8',
+        socioId: 'SOC-8',
+        socioNome: 'Juliana Pereira',
+        plano: 'basico',
+        mes: '12',
+        ano: '2025',
+        valor: 50.00,
+        dataProcessamento: '2025-12-20T14:25:00',
+        status: 'processado',
+        selected: false
+      },
+      {
+        id: 'DEB-9',
+        socioId: 'SOC-9',
+        socioNome: 'Marcos Silva',
+        plano: 'premium',
+        mes: '12',
+        ano: '2025',
+        valor: 100.00,
+        dataProcessamento: '2025-12-20T14:30:00',
+        status: 'falhou',
+        selected: false
+      },
+      {
+        id: 'DEB-10',
+        socioId: 'SOC-10',
+        socioNome: 'Luciana Rocha',
+        plano: 'vip',
+        mes: '11',
+        ano: '2025',
+        valor: 200.00,
+        dataProcessamento: '2025-11-25T09:10:00',
+        status: 'pendente',
+        selected: false
+      },
+      {
+        id: 'DEB-11',
+        socioId: 'SOC-11',
+        socioNome: 'André Cardoso',
+        plano: 'basico',
+        mes: '11',
+        ano: '2025',
+        valor: 50.00,
+        dataProcessamento: '2025-11-25T09:15:00',
+        status: 'processado',
+        selected: false
+      },
+      {
+        id: 'DEB-12',
+        socioId: 'SOC-12',
+        socioNome: 'Camila Fernandes',
+        plano: 'premium',
+        mes: '11',
+        ano: '2025',
+        valor: 100.00,
+        dataProcessamento: '2025-11-25T09:20:00',
+        status: 'pendente',
+        selected: false
+      },
+      {
+        id: 'DEB-13',
+        socioId: 'SOC-13',
+        socioNome: 'Diego Martins',
+        plano: 'vip',
+        mes: '10',
+        ano: '2025',
+        valor: 200.00,
+        dataProcessamento: '2025-10-30T16:45:00',
+        status: 'falhou',
+        selected: false
+      },
+      {
+        id: 'DEB-14',
+        socioId: 'SOC-14',
+        socioNome: 'Patrícia Gomes',
+        plano: 'basico',
+        mes: '10',
+        ano: '2025',
+        valor: 50.00,
+        dataProcessamento: '2025-10-30T16:50:00',
+        status: 'processado',
+        selected: false
+      },
+      {
+        id: 'DEB-15',
+        socioId: 'SOC-15',
+        socioNome: 'Rafael Souza',
+        plano: 'premium',
+        mes: '10',
+        ano: '2025',
+        valor: 100.00,
+        dataProcessamento: '2025-10-30T16:55:00',
+        status: 'pendente',
+        selected: false
+      },
+      {
+        id: 'DEB-16',
+        socioId: 'SOC-16',
+        socioNome: 'Sabrina Castro',
+        plano: 'vip',
+        mes: '09',
+        ano: '2025',
+        valor: 200.00,
+        dataProcessamento: '2025-09-28T11:30:00',
+        status: 'processado',
+        selected: false
+      },
+      {
+        id: 'DEB-17',
+        socioId: 'SOC-17',
+        socioNome: 'Thiago Barbosa',
+        plano: 'basico',
+        mes: '09',
+        ano: '2025',
+        valor: 50.00,
+        dataProcessamento: '2025-09-28T11:35:00',
+        status: 'falhou',
+        selected: false
+      },
+      {
+        id: 'DEB-18',
+        socioId: 'SOC-18',
+        socioNome: 'Vanessa Ribeiro',
+        plano: 'premium',
+        mes: '09',
+        ano: '2025',
+        valor: 100.00,
+        dataProcessamento: '2025-09-28T11:40:00',
+        status: 'pendente',
+        selected: false
+      },
+      {
+        id: 'DEB-19',
+        socioId: 'SOC-19',
+        socioNome: 'Wagner Santos',
+        plano: 'vip',
+        mes: '08',
+        ano: '2025',
+        valor: 200.00,
+        dataProcessamento: '2025-08-25T13:15:00',
+        status: 'processado',
+        selected: false
+      },
+      {
+        id: 'DEB-20',
+        socioId: 'SOC-20',
+        socioNome: 'Yasmin Oliveira',
+        plano: 'basico',
+        mes: '08',
+        ano: '2025',
+        valor: 50.00,
+        dataProcessamento: '2025-08-25T13:20:00',
+        status: 'pendente',
+        selected: false
+      }
+    ];
+
+    let paymentToDelete = null;
+    let isEditingPayment = false;
+
+    function updateStats() {
+      const totalEsperado = socios.length * 100; // Média
+      const totalRecebido = pagamentos.filter(p => p.status === 'pago').reduce((sum, p) => sum + p.valor, 0);
+      const totalAtrasado = pagamentos.filter(p => p.status === 'atrasado').reduce((sum, p) => sum + p.valor, 0);
+      const taxaCobranca = totalEsperado > 0 ? Math.round((totalRecebido / totalEsperado) * 100) : 0;
+
+      document.getElementById('stat-total-esperado').textContent = 'R$ ' + totalEsperado.toFixed(2).replace('.', ',');
+      document.getElementById('stat-total-recebido').textContent = 'R$ ' + totalRecebido.toFixed(2).replace('.', ',');
+      document.getElementById('stat-total-atrasado').textContent = 'R$ ' + totalAtrasado.toFixed(2).replace('.', ',');
+      document.getElementById('stat-taxa-cobranca').textContent = taxaCobranca + '%';
+    }
+
+    function populateSocioSelect() {
+      const select = document.getElementById('payment-socio');
+      select.innerHTML = '<option value="">Selecione um sócio...</option>';
+      socios.forEach(socio => {
+        const option = document.createElement('option');
+        option.value = socio.id;
+        option.textContent = socio.nome;
+        select.appendChild(option);
+      });
+    }
+
+    function renderPayments() {
+      const tbody = document.getElementById('payments-table-body');
+      const searchTerm = document.getElementById('search-socio').value.toLowerCase();
+      const mesFilter = document.getElementById('filter-mes').value;
+      const statusFilter = document.getElementById('filter-status').value;
+
+      const filtered = pagamentos.filter(p => {
+        const matchesSearch = p.socioNome.toLowerCase().includes(searchTerm);
+        const matchesMes = !mesFilter || p.mes === mesFilter;
+        const matchesStatus = !statusFilter || p.status === statusFilter;
+        return matchesSearch && matchesMes && matchesStatus;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+           <td colspan="8" class="px-6 py-12 text-center">
+            <div class="flex flex-col items-center">
+             <div class="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+              <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+             </svg>
+            </div>
+            <p class="text-slate-500 font-medium">Nenhum pagamento encontrado</p>
+            <p class="text-slate-400 text-sm mt-1">Ajuste os filtros ou registre um novo pagamento</p>
+           </div>
+          </td>
+         </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(pagamento => {
+        const statusClass = {
+          pago: 'status-pago',
+          pendente: 'status-pendente',
+          atrasado: 'status-atrasado'
+        };
+
+        const statusText = {
+          pago: 'Pago',
+          pendente: 'Pendente',
+          atrasado: 'Atrasado'
+        };
+
+        const metodoText = {
+          dinheiro: 'Dinheiro',
+          cheque: 'Cheque',
+          credito: 'Cartão de Crédito',
+          debito: 'Cartão de Débito',
+          transferencia: 'Transferência',
+          pix: 'PIX'
+        };
+
+        const dataPagamento = pagamento.dataPagamento ? new Date(pagamento.dataPagamento).toLocaleDateString('pt-BR') : '-';
+        const mesAno = `${pagamento.mes}/${pagamento.ano}`;
+
+        return `
+          <tr class="payment-row">
+           <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm">
+              ${pagamento.socioNome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+             </div>
+             <div>
+              <p class="font-semibold text-slate-800">${pagamento.socioNome}</p>
+              <p class="text-sm text-slate-400">ID: ${pagamento.socioId}</p>
+             </div>
+            </div>
+           </td>
+           <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">${pagamento.plano.charAt(0).toUpperCase() + pagamento.plano.slice(1)}</span>
+           </td>
+           <td class="px-6 py-4 text-slate-600">${mesAno}</td>
+           <td class="px-6 py-4 text-right font-semibold text-slate-800">R$ ${pagamento.valor.toFixed(2).replace('.', ',')}</td>
+           <td class="px-6 py-4">
+            <span class="status-badge ${statusClass[pagamento.status]}">${statusText[pagamento.status]}</span>
+           </td>
+           <td class="px-6 py-4 text-slate-600">${dataPagamento}</td>
+           <td class="px-6 py-4 text-slate-600">${pagamento.metodo ? metodoText[pagamento.metodo] : '-'}</td>
+           <td class="px-6 py-4">
+            <div class="flex items-center justify-center gap-2">
+             <button onclick="editPayment('${pagamento.id}')" class="w-9 h-9 rounded-lg hover:bg-blue-50 flex items-center justify-center transition-colors text-blue-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+             </button>
+             <button onclick="confirmDelete('${pagamento.id}')" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-red-600">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+             </button>
+            </div>
+           </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openPaymentModal() {
+      document.getElementById('modal-payment').classList.remove('hidden');
+      document.getElementById('form-payment').reset();
+      document.getElementById('payment-id').value = '';
+      document.getElementById('modal-payment-title').textContent = 'Registrar Pagamento';
+      document.getElementById('btn-salvar-payment').textContent = 'Registrar Pagamento';
+      document.getElementById('socio-info').classList.add('hidden');
+      document.getElementById('payment-debito-automatico').classList.remove('hidden');
+      document.getElementById('payment-debito-automatico').parentElement.classList.remove('hidden');
+      isEditingPayment = false;
+    }
+
+    function closePaymentModal() {
+      document.getElementById('modal-payment').classList.add('hidden');
+    }
+
+    function editPayment(id) {
+      const pagamento = pagamentos.find(p => p.id === id);
+      if (!pagamento) return;
+
+      isEditingPayment = true;
+      document.getElementById('payment-id').value = id;
+      document.getElementById('payment-socio').value = pagamento.socioId;
+      document.getElementById('payment-mes').value = pagamento.mes;
+      document.getElementById('payment-ano').value = pagamento.ano;
+      document.getElementById('payment-valor').value = pagamento.valor;
+      document.getElementById('payment-data').value = pagamento.dataPagamento || '';
+      document.getElementById('payment-metodo').value = pagamento.metodo || '';
+      document.getElementById('payment-status').value = pagamento.status;
+      document.getElementById('modal-payment-title').textContent = 'Editar Pagamento';
+      document.getElementById('btn-salvar-payment').textContent = 'Atualizar Pagamento';
+      document.getElementById('modal-payment').classList.remove('hidden');
+
+      // Esconder checkbox de débito automático na edição
+      document.getElementById('payment-debito-automatico').classList.add('hidden');
+      document.getElementById('payment-debito-automatico').parentElement.classList.add('hidden');
+
+      // Show socio info
+      const socio = socios.find(s => s.id === pagamento.socioId);
+      if (socio) {
+        document.getElementById('info-plano').textContent = socio.plano.charAt(0).toUpperCase() + socio.plano.slice(1);
+        document.getElementById('info-valor').textContent = 'R$ ' + precosPlanos[socio.plano].toFixed(2).replace('.', ',');
+        document.getElementById('socio-info').classList.remove('hidden');
+      }
+    }
+
+    function confirmDelete(id) {
+      paymentToDelete = id;
+      document.getElementById('modal-delete').classList.remove('hidden');
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('modal-delete').classList.add('hidden');
+      paymentToDelete = null;
+    }
+
+    function deletePayment() {
+      if (!paymentToDelete) return;
+
+      pagamentos = pagamentos.filter(p => p.id !== paymentToDelete);
+      showToast('Pagamento excluído com sucesso!', '✅');
+      closeDeleteModal();
+      renderPayments();
+      updateStats();
+    }
+
+    function savePayment(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('payment-id').value;
+      const socioId = document.getElementById('payment-socio').value;
+      const socio = socios.find(s => s.id === socioId);
+      if (!socio) return;
+
+      const mes = document.getElementById('payment-mes').value;
+      const ano = document.getElementById('payment-ano').value;
+      const valor = parseFloat(document.getElementById('payment-valor').value);
+      const dataPagamento = document.getElementById('payment-data').value;
+      const metodo = document.getElementById('payment-metodo').value;
+      const status = document.getElementById('payment-status').value;
+
+      const isDebitoAutomatico = document.getElementById('payment-debito-automatico').checked;
+
+      if (!socioId || !mes || !ano || !valor) {
+        showToast('Preencha todos os campos obrigatórios', '⚠️');
+        return;
+      }
+
+      if (isEditingPayment) {
+        const index = pagamentos.findIndex(p => p.id === id);
+        if (index !== -1) {
+          pagamentos[index] = { ...pagamentos[index], socioId, socioNome: socio.nome, plano: socio.plano, mes, ano, valor, dataPagamento, metodo, status };
+          showToast('Pagamento atualizado com sucesso!', '✅');
+        }
+      } else {
+        const newPagamento = {
+          id: `PAY-${Date.now()}`,
+          socioId,
+          socioNome: socio.nome,
+          plano: socio.plano,
+          mes,
+          ano,
+          valor,
+          status,
+          dataPagamento,
+          metodo
+        };
+        pagamentos.push(newPagamento);
+
+        // Se marcado como débito automático, adicionar à lista de débitos automáticos
+        if (isDebitoAutomatico) {
+          const newDebito = {
+            id: `DEB-${Date.now()}`,
+            socioId,
+            socioNome: socio.nome,
+            plano: socio.plano,
+            mes,
+            ano,
+            valor,
+            dataProcessamento: new Date().toISOString(),
+            status: 'pendente',
+            selected: false
+          };
+          debitosAutomaticos.push(newDebito);
+          showToast('Pagamento registrado e débito automático criado!', '✅');
+        } else {
+          showToast('Pagamento registrado com sucesso!', '✅');
+        }
+      }
+
+      closePaymentModal();
+      renderPayments();
+      updateStats();
+    }
+
+    function clearFilters() {
+      document.getElementById('search-socio').value = '';
+      document.getElementById('filter-mes').value = '';
+      document.getElementById('filter-status').value = '';
+      renderPayments();
+    }
+
+    // Funções para Débitos Automáticos
+    function switchTab(tabName, event) {
+      // Esconder todas as abas
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+      document.querySelectorAll('.tab-button').forEach(btn => {
+        btn.classList.remove('bg-blue-500', 'text-white');
+        btn.classList.add('bg-gray-200', 'text-gray-700');
+      });
+
+      // Mostrar aba selecionada
+      document.getElementById(tabName).classList.remove('hidden');
+      event.target.classList.remove('bg-gray-200', 'text-gray-700');
+      event.target.classList.add('bg-blue-500', 'text-white');
+
+      // Renderizar conteúdo da aba se necessário
+      if (tabName === 'content-debitos') {
+        renderDebitosAutomaticos();
+      }
+    }
+
+    function renderDebitosAutomaticos() {
+      const tbody = document.getElementById('debitos-table-body');
+      const searchTerm = document.getElementById('search-debito').value.toLowerCase();
+      const statusFilter = document.getElementById('filter-debito-status').value;
+
+      const filteredDebitos = debitosAutomaticos.filter(debito => {
+        const matchesSearch = debito.socioNome.toLowerCase().includes(searchTerm);
+        const matchesStatus = !statusFilter || debito.status === statusFilter;
+        return matchesSearch && matchesStatus;
+      });
+
+      tbody.innerHTML = filteredDebitos.map(debito => {
+        const dataProcessamento = new Date(debito.dataProcessamento).toLocaleString('pt-BR');
+        const statusClass = {
+          'pendente': 'bg-yellow-100 text-yellow-800',
+          'processado': 'bg-green-100 text-green-800',
+          'falhou': 'bg-red-100 text-red-800'
+        };
+        const statusText = {
+          'pendente': 'Pendente',
+          'processado': 'Processado',
+          'falhou': 'Falhou'
+        };
+
+        return `
+          <tr class="debito-row ${debito.selected ? 'debito-selected' : ''}">
+           <td class="px-6 py-4">
+            <input type="checkbox" class="w-4 h-4 text-blue-600 rounded focus:ring-blue-500" 
+                   onchange="toggleDebitoSelection('${debito.id}')" 
+                   ${debito.selected ? 'checked' : ''}>
+           </td>
+           <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+             <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white font-bold text-sm">
+              ${debito.socioNome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+             </div>
+             <div>
+              <p class="font-semibold text-slate-800">${debito.socioNome}</p>
+              <p class="text-sm text-slate-400">ID: ${debito.socioId}</p>
+             </div>
+            </div>
+           </td>
+           <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">${debito.plano.charAt(0).toUpperCase() + debito.plano.slice(1)}</span>
+           </td>
+           <td class="px-6 py-4 text-slate-600">${debito.mes}/${debito.ano}</td>
+           <td class="px-6 py-4 text-right font-semibold text-slate-800">R$ ${debito.valor.toFixed(2).replace('.', ',')}</td>
+           <td class="px-6 py-4">
+            <span class="px-3 py-1 rounded-full text-xs font-semibold ${statusClass[debito.status]}">${statusText[debito.status]}</span>
+           </td>
+           <td class="px-6 py-4 text-slate-600">${dataProcessamento}</td>
+           <td class="px-6 py-4">
+            <div class="flex items-center justify-center gap-2">
+             <button onclick="editDebito('${debito.id}')" class="w-9 h-9 rounded-lg hover:bg-blue-50 flex items-center justify-center transition-colors text-blue-600" title="Editar Débito">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+             </button>
+             <button onclick="confirmDeleteDebito('${debito.id}')" class="w-9 h-9 rounded-lg hover:bg-red-50 flex items-center justify-center transition-colors text-red-600" title="Excluir Débito">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+             </button>
+            </div>
+           </td>
+          </tr>
+        `;
+      }).join('');
+
+      updateBatchButtons();
+    }
+
+    function toggleDebitoSelection(debitoId) {
+      const debito = debitosAutomaticos.find(d => d.id === debitoId);
+      if (debito) {
+        debito.selected = !debito.selected;
+        renderDebitosAutomaticos();
+      }
+    }
+
+    function selectAllDebitos() {
+      const allSelected = debitosAutomaticos.every(d => d.selected);
+      debitosAutomaticos.forEach(d => d.selected = !allSelected);
+      renderDebitosAutomaticos();
+    }
+
+    function updateBatchButtons() {
+      const selectedCount = debitosAutomaticos.filter(d => d.selected).length;
+      const confirmBtn = document.getElementById('btn-confirmar-lote');
+      const rejectBtn = document.getElementById('btn-rejeitar-lote');
+
+      if (selectedCount > 0) {
+        confirmBtn.disabled = false;
+        rejectBtn.disabled = false;
+        confirmBtn.textContent = `Confirmar Débitos (${selectedCount})`;
+        rejectBtn.textContent = `Rejeitar Selecionados (${selectedCount})`;
+      } else {
+        confirmBtn.disabled = true;
+        rejectBtn.disabled = true;
+        confirmBtn.textContent = 'Confirmar Débitos';
+        rejectBtn.textContent = 'Rejeitar Selecionados';
+      }
+    }
+
+    function confirmarLote() {
+      const selectedDebitos = debitosAutomaticos.filter(d => d.selected && d.status === 'pendente');
+      if (selectedDebitos.length === 0) {
+        showToast('Nenhum débito pendente selecionado!', '⚠️');
+        return;
+      }
+
+      selectedDebitos.forEach(debito => {
+        debito.status = 'processado';
+        debito.selected = false;
+      });
+
+      renderDebitosAutomaticos();
+      updateStats();
+      showToast(`${selectedDebitos.length} débito(s) confirmado(s) com sucesso!`, '✅');
+    }
+
+    function rejeitarLote() {
+      const selectedDebitos = debitosAutomaticos.filter(d => d.selected && d.status === 'pendente');
+      if (selectedDebitos.length === 0) {
+        showToast('Nenhum débito pendente selecionado!', '⚠️');
+        return;
+      }
+
+      selectedDebitos.forEach(debito => {
+        debito.status = 'falhou';
+        debito.selected = false;
+      });
+
+      renderDebitosAutomaticos();
+      updateStats();
+      showToast(`${selectedDebitos.length} débito(s) rejeitado(s)!`, '❌');
+    }
+
+    // Funções para edição individual de débitos
+    let debitoToDelete = null;
+
+    function editDebito(debitoId) {
+      const debito = debitosAutomaticos.find(d => d.id === debitoId);
+      if (!debito) return;
+
+      document.getElementById('debito-id').value = debito.id;
+      document.getElementById('debito-socio').value = debito.socioNome;
+      document.getElementById('debito-mes').value = debito.mes;
+      document.getElementById('debito-ano').value = debito.ano;
+      document.getElementById('debito-valor').value = debito.valor;
+      document.getElementById('debito-status').value = debito.status;
+      document.getElementById('modal-debito-title').textContent = 'Editar Débito Automático';
+      document.getElementById('btn-salvar-debito').textContent = 'Salvar Débito';
+      document.getElementById('modal-debito').classList.remove('hidden');
+    }
+
+    function closeDebitoModal() {
+      document.getElementById('modal-debito').classList.add('hidden');
+    }
+
+    function saveDebito(event) {
+      event.preventDefault();
+
+      const id = document.getElementById('debito-id').value;
+      const mes = document.getElementById('debito-mes').value;
+      const ano = document.getElementById('debito-ano').value;
+      const valor = parseFloat(document.getElementById('debito-valor').value);
+      const status = document.getElementById('debito-status').value;
+
+      if (!mes || !ano || !valor) {
+        showToast('Preencha todos os campos obrigatórios', '⚠️');
+        return;
+      }
+
+      const index = debitosAutomaticos.findIndex(d => d.id === id);
+      if (index !== -1) {
+        debitosAutomaticos[index].mes = mes;
+        debitosAutomaticos[index].ano = ano;
+        debitosAutomaticos[index].valor = valor;
+        debitosAutomaticos[index].status = status;
+        debitosAutomaticos[index].dataProcessamento = new Date().toISOString();
+        showToast('Débito atualizado com sucesso!', '✅');
+      }
+
+      closeDebitoModal();
+      renderDebitosAutomaticos();
+      updateStats();
+    }
+
+    function confirmDeleteDebito(debitoId) {
+      debitoToDelete = debitoId;
+      document.getElementById('modal-delete-debito').classList.remove('hidden');
+    }
+
+    function closeDeleteDebitoModal() {
+      document.getElementById('modal-delete-debito').classList.add('hidden');
+      debitoToDelete = null;
+    }
+
+    function deleteDebito() {
+      if (!debitoToDelete) return;
+
+      const index = debitosAutomaticos.findIndex(d => d.id === debitoToDelete);
+      if (index !== -1) {
+        debitosAutomaticos.splice(index, 1);
+        showToast('Débito excluído com sucesso!', '✅');
+      }
+
+      closeDeleteDebitoModal();
+      renderDebitosAutomaticos();
+      updateStats();
+    }
+
+    function clearDebitoFilters() {
+      document.getElementById('search-debito').value = '';
+      document.getElementById('filter-debito-status').value = '';
+      renderDebitosAutomaticos();
+    }
+
+    function showToast(message, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = message;
+      document.getElementById('toast-icon').textContent = icon;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    // Event listeners
+    document.getElementById('form-payment').addEventListener('submit', savePayment);
+    document.getElementById('btn-confirm-delete').addEventListener('click', deletePayment);
+    document.getElementById('search-socio').addEventListener('input', renderPayments);
+    document.getElementById('filter-mes').addEventListener('change', renderPayments);
+    document.getElementById('filter-status').addEventListener('change', renderPayments);
+    document.getElementById('payment-socio').addEventListener('change', function() {
+      const socioId = this.value;
+      const socio = socios.find(s => s.id === socioId);
+      if (socio) {
+        document.getElementById('info-plano').textContent = socio.plano.charAt(0).toUpperCase() + socio.plano.slice(1);
+        document.getElementById('info-valor').textContent = 'R$ ' + precosPlanos[socio.plano].toFixed(2).replace('.', ',');
+        document.getElementById('socio-info').classList.remove('hidden');
+      } else {
+        document.getElementById('socio-info').classList.add('hidden');
+      }
+    });
+
+    // Event listeners para Débitos Automáticos
+    document.getElementById('search-debito').addEventListener('input', renderDebitosAutomaticos);
+    document.getElementById('filter-debito-status').addEventListener('change', renderDebitosAutomaticos);
+    document.getElementById('select-all-debitos').addEventListener('change', selectAllDebitos);
+    document.getElementById('btn-confirmar-lote').addEventListener('click', confirmarLote);
+    document.getElementById('btn-rejeitar-lote').addEventListener('click', rejeitarLote);
+
+    // Event listeners para edição de débitos
+    document.getElementById('form-debito').addEventListener('submit', saveDebito);
+    document.getElementById('btn-confirm-delete-debito').addEventListener('click', deleteDebito);
+
+    // Initialize
+    populateSocioSelect();
+    renderPayments();
+    updateStats();
+    renderDebitosAutomaticos();
+  </script>
+  <script src="menu-loader.js"></script>
+ </body>
+</html>

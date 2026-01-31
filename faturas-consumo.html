@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faturas de Consumo - Sistema de Gestão de Sócios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .stat-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-pago { background-color: #dcfce7; color: #166534; }
+    .status-pendente { background-color: #fef3c7; color: #92400e; }
+    .status-atrasado { background-color: #fee2e2; color: #991b1b; }
+
+    .table-row {
+      transition: all 0.2s ease;
+    }
+
+    .table-row:hover {
+      background-color: #f8fafc;
+    }
+  </style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="menu-container"></div>
+  <div id="app" class="h-full overflow-auto">
+   <main class="ml-64 p-8">
+    <header class="mb-8">
+     <div class="flex items-center justify-between">
+      <div>
+       <h2 class="text-3xl font-bold text-slate-800">Faturas de Consumo</h2>
+       <p class="text-slate-500 mt-1">Controle de contas de água, luz, gás, internet e outros serviços</p>
+      </div>
+      <button id="btn-nova-fatura" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+       </svg>
+       Nova Fatura
+      </button>
+     </div>
+    </header>
+
+    <!-- Resumo de Gastos -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium text-slate-600">Total Pendente</p>
+        <p class="text-2xl font-bold text-slate-800" id="total-pendente">R$ 0,00</p>
+       </div>
+       <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium text-slate-600">Total Atrasado</p>
+        <p class="text-2xl font-bold text-slate-800" id="total-atrasado">R$ 0,00</p>
+       </div>
+       <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium text-slate-600">Total Pago</p>
+        <p class="text-2xl font-bold text-slate-800" id="total-pago">R$ 0,00</p>
+       </div>
+       <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium text-slate-600">Total Geral</p>
+        <p class="text-2xl font-bold text-slate-800" id="total-geral">R$ 0,00</p>
+       </div>
+       <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+     <div class="flex flex-wrap gap-4 items-end">
+      <div class="flex-1 min-w-48">
+       <label class="block text-sm font-medium text-slate-700 mb-2">Buscar</label>
+       <input type="text" id="filtro-busca" placeholder="Buscar por tipo ou referência..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+      </div>
+      <div class="flex-1 min-w-48">
+       <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Consumo</label>
+       <select id="filtro-tipo" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">Todos os tipos</option>
+        <option value="agua">💧 Água</option>
+        <option value="energia">⚡ Energia Elétrica</option>
+        <option value="gas">🔥 Gás Natural</option>
+        <option value="internet">📡 Internet</option>
+        <option value="lixo">🗑️ Coleta de Lixo</option>
+        <option value="telefone">📞 Telefone</option>
+        <option value="outros">🔧 Outros</option>
+       </select>
+      </div>
+      <div class="flex-1 min-w-48">
+       <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
+       <select id="filtro-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+        <option value="">Todos os status</option>
+        <option value="pago">Pago</option>
+        <option value="pendente">Pendente</option>
+        <option value="atrasado">Atrasado</option>
+       </select>
+      </div>
+      <button id="btn-limpar-filtros" class="px-4 py-2 text-slate-600 hover:text-slate-800 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+       Limpar Filtros
+      </button>
+     </div>
+    </div>
+
+    <!-- Tabela de Faturas -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+     <div class="px-6 py-4 border-b border-slate-200">
+      <h3 class="text-lg font-semibold text-slate-800">Faturas Registradas</h3>
+     </div>
+     <div class="overflow-x-auto">
+      <table class="w-full">
+       <thead class="bg-slate-50">
+        <tr>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Referência</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Vencimento</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ações</th>
+        </tr>
+       </thead>
+       <tbody id="tabela-faturas" class="divide-y divide-slate-200">
+        <!-- Faturas serão inseridas aqui dinamicamente -->
+       </tbody>
+      </table>
+     </div>
+     <div id="empty-state" class="px-6 py-12 text-center">
+      <svg class="w-12 h-12 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+      </svg>
+      <h3 class="text-lg font-medium text-slate-900 mb-2">Nenhuma fatura registrada</h3>
+      <p class="text-slate-500">Clique em "Nova Fatura" para começar a registrar suas contas de consumo.</p>
+     </div>
+    </div>
+   </main>
+
+   <!-- Modal Nova Fatura -->
+   <div id="modal-nova-fatura" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+     <div class="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-slate-200">
+       <h3 class="text-lg font-semibold text-slate-800">Nova Fatura</h3>
+      </div>
+      <form id="form-nova-fatura" class="p-6 space-y-4">
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Consumo</label>
+        <select name="tipo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+         <option value="">Selecione o tipo</option>
+         <option value="agua">💧 Água</option>
+         <option value="energia">⚡ Energia Elétrica</option>
+         <option value="gas">🔥 Gás Natural</option>
+         <option value="internet">📡 Internet</option>
+         <option value="lixo">🗑️ Coleta de Lixo</option>
+         <option value="telefone">📞 Telefone</option>
+         <option value="outros">🔧 Outros</option>
+        </select>
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Valor da Conta (R$)</label>
+        <input type="number" name="valor" step="0.01" min="0" required placeholder="0,00" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Referência do Mês</label>
+        <input type="month" name="referencia" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Data de Vencimento</label>
+        <input type="date" name="vencimento" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Status do Pagamento</label>
+        <select name="status" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+         <option value="pendente">Pendente</option>
+         <option value="pago">Pago</option>
+         <option value="atrasado">Atrasado</option>
+        </select>
+       </div>
+       <div class="flex gap-3 pt-4">
+        <button type="button" id="btn-cancelar" class="flex-1 px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+         Cancelar
+        </button>
+        <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+         Salvar Fatura
+        </button>
+       </div>
+      </form>
+     </div>
+    </div>
+   </div>
+
+   <!-- Modal Editar Fatura -->
+   <div id="modal-editar-fatura" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+     <div class="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-slate-200">
+       <h3 class="text-lg font-semibold text-slate-800">Editar Fatura</h3>
+      </div>
+      <form id="form-editar-fatura" class="p-6 space-y-4">
+       <input type="hidden" name="id">
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Consumo</label>
+        <select name="tipo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+         <option value="">Selecione o tipo</option>
+         <option value="agua">💧 Água</option>
+         <option value="energia">⚡ Energia Elétrica</option>
+         <option value="gas">🔥 Gás Natural</option>
+         <option value="internet">📡 Internet</option>
+         <option value="lixo">🗑️ Coleta de Lixo</option>
+         <option value="telefone">📞 Telefone</option>
+         <option value="outros">🔧 Outros</option>
+        </select>
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Valor da Conta (R$)</label>
+        <input type="number" name="valor" step="0.01" min="0" required placeholder="0,00" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Referência do Mês</label>
+        <input type="month" name="referencia" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Data de Vencimento</label>
+        <input type="date" name="vencimento" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+       </div>
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Status do Pagamento</label>
+        <select name="status" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+         <option value="pendente">Pendente</option>
+         <option value="pago">Pago</option>
+         <option value="atrasado">Atrasado</option>
+        </select>
+       </div>
+       <div class="flex gap-3 pt-4">
+        <button type="button" id="btn-cancelar-edicao" class="flex-1 px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+         Cancelar
+        </button>
+        <button type="submit" class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors">
+         Salvar Alterações
+        </button>
+       </div>
+      </form>
+     </div>
+    </div>
+   </div>
+
+   <!-- Toast Notifications -->
+   <div id="toast" class="fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+    <p id="toast-message"></p>
+   </div>
+
+   <script>
+    // Dados das faturas (simulando localStorage)
+    let faturas = JSON.parse(localStorage.getItem('faturas-consumo')) || [];
+
+    // Elementos DOM
+    const modalNova = document.getElementById('modal-nova-fatura');
+    const modalEditar = document.getElementById('modal-editar-fatura');
+    const formNova = document.getElementById('form-nova-fatura');
+    const formEditar = document.getElementById('form-editar-fatura');
+    const tabelaFaturas = document.getElementById('tabela-faturas');
+    const emptyState = document.getElementById('empty-state');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    // Filtros
+    const filtroBusca = document.getElementById('filtro-busca');
+    const filtroTipo = document.getElementById('filtro-tipo');
+    const filtroStatus = document.getElementById('filtro-status');
+
+    // Resumos
+    const totalPendente = document.getElementById('total-pendente');
+    const totalAtrasado = document.getElementById('total-atrasado');
+    const totalPago = document.getElementById('total-pago');
+    const totalGeral = document.getElementById('total-geral');
+
+    // Tipos de consumo com ícones
+    const tiposConsumo = {
+     agua: '💧 Água',
+     energia: '⚡ Energia Elétrica',
+     gas: '🔥 Gás Natural',
+     internet: '📡 Internet',
+     lixo: '🗑️ Coleta de Lixo',
+     telefone: '📞 Telefone',
+     outros: '🔧 Outros'
+    };
+
+    // Funções utilitárias
+    function formatarMoeda(valor) {
+     return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+     }).format(valor);
+    }
+
+    function formatarData(data) {
+     return new Date(data).toLocaleDateString('pt-BR');
+    }
+
+    function formatarMesAno(mesAno) {
+     const [ano, mes] = mesAno.split('-');
+     const data = new Date(ano, mes - 1);
+     return data.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' });
+    }
+
+    function verificarAtraso(dataVencimento) {
+     const hoje = new Date();
+     const vencimento = new Date(dataVencimento);
+     return hoje > vencimento;
+    }
+
+    function mostrarToast(mensagem, tipo = 'success') {
+     toastMessage.textContent = mensagem;
+     toast.className = `fixed bottom-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
+      tipo === 'success' ? 'bg-green-500' : tipo === 'error' ? 'bg-red-500' : 'bg-blue-500'
+     }`;
+     toast.style.transform = 'translateY(0)';
+     setTimeout(() => {
+      toast.style.transform = 'translateY(100%)';
+     }, 3000);
+    }
+
+    function salvarFaturas() {
+     localStorage.setItem('faturas-consumo', JSON.stringify(faturas));
+    }
+
+    function atualizarResumos() {
+     let pendente = 0;
+     let atrasado = 0;
+     let pago = 0;
+     let geral = 0;
+
+     faturas.forEach(fatura => {
+      const valor = parseFloat(fatura.valor);
+      geral += valor;
+
+      if (fatura.status === 'pago') {
+       pago += valor;
+      } else if (fatura.status === 'atrasado' || (fatura.status === 'pendente' && verificarAtraso(fatura.vencimento))) {
+       atrasado += valor;
+      } else if (fatura.status === 'pendente') {
+       pendente += valor;
+      }
+     });
+
+     totalPendente.textContent = formatarMoeda(pendente);
+     totalAtrasado.textContent = formatarMoeda(atrasado);
+     totalPago.textContent = formatarMoeda(pago);
+     totalGeral.textContent = formatarMoeda(geral);
+    }
+
+    function renderizarFaturas(faturasFiltradas = faturas) {
+     tabelaFaturas.innerHTML = '';
+
+     if (faturasFiltradas.length === 0) {
+      emptyState.style.display = 'block';
+      return;
+     }
+
+     emptyState.style.display = 'none';
+
+     faturasFiltradas.forEach(fatura => {
+      const linha = document.createElement('tr');
+      linha.className = 'table-row';
+      linha.dataset.id = fatura.id;
+
+      const status = fatura.status;
+      const atrasado = status === 'pendente' && verificarAtraso(fatura.vencimento);
+      const statusFinal = atrasado ? 'atrasado' : status;
+
+      linha.innerHTML = `
+       <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-slate-900">${tiposConsumo[fatura.tipo]}</div>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-slate-900">${formatarMoeda(fatura.valor)}</div>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-slate-500">${formatarMesAno(fatura.referencia)}</div>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-slate-500">${formatarData(fatura.vencimento)}</div>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap">
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full status-${statusFinal}">
+         ${statusFinal === 'pago' ? 'Pago' : statusFinal === 'atrasado' ? 'Atrasado' : 'Pendente'}
+        </span>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <div class="flex items-center gap-2">
+         <button class="btn-editar text-blue-600 hover:text-blue-900" title="Editar">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+         </button>
+         <button class="btn-marcar-pago text-green-600 hover:text-green-900" title="Marcar como Pago">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+         </button>
+         <button class="btn-deletar text-red-600 hover:text-red-900" title="Deletar">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+         </button>
+        </div>
+       </td>
+      `;
+
+      tabelaFaturas.appendChild(linha);
+     });
+    }
+
+    function filtrarFaturas() {
+     const busca = filtroBusca.value.toLowerCase();
+     const tipo = filtroTipo.value;
+     const status = filtroStatus.value;
+
+     const filtradas = faturas.filter(fatura => {
+      const matchBusca = !busca ||
+       tiposConsumo[fatura.tipo].toLowerCase().includes(busca) ||
+       fatura.referencia.includes(busca);
+
+      const matchTipo = !tipo || fatura.tipo === tipo;
+
+      let matchStatus = true;
+      if (status) {
+       if (status === 'atrasado') {
+        matchStatus = fatura.status === 'atrasado' || (fatura.status === 'pendente' && verificarAtraso(fatura.vencimento));
+       } else {
+        matchStatus = fatura.status === status;
+       }
+      }
+
+      return matchBusca && matchTipo && matchStatus;
+     });
+
+     renderizarFaturas(filtradas);
+    }
+
+    // Event Listeners
+    document.getElementById('btn-nova-fatura').addEventListener('click', () => {
+     modalNova.classList.remove('hidden');
+     formNova.reset();
+    });
+
+    document.getElementById('btn-cancelar').addEventListener('click', () => {
+     modalNova.classList.add('hidden');
+    });
+
+    document.getElementById('btn-cancelar-edicao').addEventListener('click', () => {
+     modalEditar.classList.add('hidden');
+    });
+
+    formNova.addEventListener('submit', (e) => {
+     e.preventDefault();
+     const formData = new FormData(formNova);
+     const novaFatura = {
+      id: Date.now(),
+      tipo: formData.get('tipo'),
+      valor: parseFloat(formData.get('valor')),
+      referencia: formData.get('referencia'),
+      vencimento: formData.get('vencimento'),
+      status: formData.get('status')
+     };
+
+     faturas.push(novaFatura);
+     salvarFaturas();
+     atualizarResumos();
+     renderizarFaturas();
+     modalNova.classList.add('hidden');
+     mostrarToast('Fatura registrada com sucesso!');
+    });
+
+    formEditar.addEventListener('submit', (e) => {
+     e.preventDefault();
+     const formData = new FormData(formEditar);
+     const id = parseInt(formData.get('id'));
+     const faturaIndex = faturas.findIndex(f => f.id === id);
+
+     if (faturaIndex !== -1) {
+      faturas[faturaIndex] = {
+       ...faturas[faturaIndex],
+       tipo: formData.get('tipo'),
+       valor: parseFloat(formData.get('valor')),
+       referencia: formData.get('referencia'),
+       vencimento: formData.get('vencimento'),
+       status: formData.get('status')
+      };
+
+      salvarFaturas();
+      atualizarResumos();
+      renderizarFaturas();
+      modalEditar.classList.add('hidden');
+      mostrarToast('Fatura atualizada com sucesso!');
+     }
+    });
+
+    // Event delegation para ações da tabela
+    tabelaFaturas.addEventListener('click', (e) => {
+     const linha = e.target.closest('tr');
+     if (!linha) return;
+
+     const id = parseInt(linha.dataset.id);
+     const fatura = faturas.find(f => f.id === id);
+
+     if (e.target.closest('.btn-editar')) {
+      // Preencher formulário de edição
+      formEditar.elements['id'].value = fatura.id;
+      formEditar.elements['tipo'].value = fatura.tipo;
+      formEditar.elements['valor'].value = fatura.valor;
+      formEditar.elements['referencia'].value = fatura.referencia;
+      formEditar.elements['vencimento'].value = fatura.vencimento;
+      formEditar.elements['status'].value = fatura.status;
+
+      modalEditar.classList.remove('hidden');
+     } else if (e.target.closest('.btn-marcar-pago')) {
+      fatura.status = 'pago';
+      salvarFaturas();
+      atualizarResumos();
+      renderizarFaturas();
+      mostrarToast('Fatura marcada como paga!');
+     } else if (e.target.closest('.btn-deletar')) {
+      if (confirm('Tem certeza que deseja deletar esta fatura?')) {
+       faturas = faturas.filter(f => f.id !== id);
+       salvarFaturas();
+       atualizarResumos();
+       renderizarFaturas();
+       mostrarToast('Fatura deletada com sucesso!');
+      }
+     }
+    });
+
+    // Filtros
+    filtroBusca.addEventListener('input', filtrarFaturas);
+    filtroTipo.addEventListener('change', filtrarFaturas);
+    filtroStatus.addEventListener('change', filtrarFaturas);
+
+    document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
+     filtroBusca.value = '';
+     filtroTipo.value = '';
+     filtroStatus.value = '';
+     renderizarFaturas();
+    });
+
+    // Inicialização
+    atualizarResumos();
+    renderizarFaturas();
+   </script>  <script src="menu-loader.js"></script> </body>
+</html>

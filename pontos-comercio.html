@@ -1,0 +1,794 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pontos de Comércio - Sistema de Gestão de Sócios</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .stat-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .status-ativo { background-color: #dcfce7; color: #166534; }
+    .status-proximo { background-color: #fef3c7; color: #92400e; }
+    .status-vencido { background-color: #fee2e2; color: #991b1b; }
+
+    .table-row {
+      transition: all 0.2s ease;
+    }
+
+    .table-row:hover {
+      background-color: #f8fafc;
+    }
+
+    .upload-area {
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+
+    .upload-area:hover {
+      border-color: #3b82f6;
+      background-color: #eff6ff;
+    }
+
+    .upload-area.dragover {
+      border-color: #3b82f6;
+      background-color: #eff6ff;
+    }
+  </style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="menu-container"></div>
+  <div id="app" class="h-full overflow-auto">
+
+   <main class="ml-64 p-8">
+    <header class="mb-8">
+     <div class="flex items-center justify-between">
+      <div>
+       <h2 class="text-3xl font-bold text-slate-800">Pontos de Comércio</h2>
+       <p class="text-slate-500 mt-1">Gestão de locações comerciais e recebimentos</p>
+      </div>
+      <button id="btn-novo-ponto" class="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+       </svg>
+       Novo Ponto
+      </button>
+     </div>
+    </header>
+
+    <!-- Estatísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium text-slate-600">Total de Pontos</p>
+        <p class="text-2xl font-bold text-slate-800" id="total-pontos">0</p>
+       </div>
+       <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium text-slate-600">Receita Mensal Esperada</p>
+        <p class="text-2xl font-bold text-slate-800" id="receita-esperada">R$ 0,00</p>
+       </div>
+       <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium text-slate-600">Próximos Vencimentos</p>
+        <p class="text-2xl font-bold text-slate-800" id="proximos-vencimentos">0</p>
+       </div>
+       <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative">
+      <div class="flex items-center justify-between">
+       <div>
+        <p class="text-sm font-medium text-slate-600">Pontos Vencidos</p>
+        <p class="text-2xl font-bold text-slate-800" id="pontos-vencidos">0</p>
+       </div>
+       <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="bg-white p-6 rounded-xl shadow-sm mb-6">
+     <div class="flex flex-wrap gap-4 items-end">
+      <div class="flex-1 min-w-48">
+       <label class="block text-sm font-medium text-slate-700 mb-2">Buscar</label>
+       <input type="text" id="filtro-busca" placeholder="Buscar por nome, CNPJ ou tipo..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+      </div>
+      <div class="flex-1 min-w-48">
+       <label class="block text-sm font-medium text-slate-700 mb-2">Tipo</label>
+       <select id="filtro-tipo" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        <option value="">Todos os tipos</option>
+        <option value="placas">📋 Placas</option>
+        <option value="comercio">🏪 Comércio</option>
+       </select>
+      </div>
+      <div class="flex-1 min-w-48">
+       <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
+       <select id="filtro-status" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        <option value="">Todos os status</option>
+        <option value="ativo">Ativo</option>
+        <option value="proximo">Próximo Vencer</option>
+        <option value="vencido">Vencido</option>
+       </select>
+      </div>
+      <button id="btn-limpar-filtros" class="px-4 py-2 text-slate-600 hover:text-slate-800 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">
+       Limpar Filtros
+      </button>
+     </div>
+    </div>
+
+    <!-- Tabela de Pontos -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+     <div class="px-6 py-4 border-b border-slate-200">
+      <h3 class="text-lg font-semibold text-slate-800">Pontos Cadastrados</h3>
+     </div>
+     <div class="overflow-x-auto">
+      <table class="w-full">
+       <thead class="bg-slate-50">
+        <tr>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Tipo</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Nome</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor Mensal</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Dia Venc.</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Status</th>
+         <th class="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Ações</th>
+        </tr>
+       </thead>
+       <tbody id="tabela-pontos" class="divide-y divide-slate-200">
+        <!-- Pontos serão inseridos aqui dinamicamente -->
+       </tbody>
+      </table>
+     </div>
+     <div id="empty-state" class="px-6 py-12 text-center">
+      <svg class="w-12 h-12 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+      </svg>
+      <h3 class="text-lg font-medium text-slate-900 mb-2">Nenhum ponto cadastrado</h3>
+      <p class="text-slate-500">Clique em "Novo Ponto" para começar a cadastrar locações de placas e comércios.</p>
+     </div>
+    </div>
+   </main>
+
+   <!-- Modal Novo Ponto -->
+   <div id="modal-novo-ponto" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+     <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-slate-200">
+       <h3 class="text-lg font-semibold text-slate-800">Novo Ponto de Comércio</h3>
+      </div>
+      <form id="form-novo-ponto" class="p-6 space-y-6">
+       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="md:col-span-2">
+         <label class="block text-sm font-medium text-slate-700 mb-2">Tipo de Ponto</label>
+         <select name="tipo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+          <option value="">Selecione o tipo</option>
+          <option value="placas">📋 Placas</option>
+          <option value="comercio">🏪 Comércio</option>
+         </select>
+        </div>
+
+        <div>
+         <label class="block text-sm font-medium text-slate-700 mb-2">Nome da Empresa</label>
+         <input type="text" name="nome" required placeholder="Nome da empresa ou ponto comercial" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+
+        <div>
+         <label class="block text-sm font-medium text-slate-700 mb-2">CNPJ</label>
+         <input type="text" name="cnpj" placeholder="00.000.000/0000-00" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+
+        <div>
+         <label class="block text-sm font-medium text-slate-700 mb-2">Telefone</label>
+         <input type="tel" name="telefone" placeholder="(00) 00000-0000" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+
+        <div>
+         <label class="block text-sm font-medium text-slate-700 mb-2">Email</label>
+         <input type="email" name="email" placeholder="contato@empresa.com" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+
+        <div class="md:col-span-2">
+         <label class="block text-sm font-medium text-slate-700 mb-2">Endereço</label>
+         <input type="text" name="endereco" placeholder="Endereço completo" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+
+        <div>
+         <label class="block text-sm font-medium text-slate-700 mb-2">Valor Mensal (R$)</label>
+         <input type="number" name="valorMensal" step="0.01" min="0" required placeholder="0,00" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+
+        <div>
+         <label class="block text-sm font-medium text-slate-700 mb-2">Dia do Vencimento</label>
+         <input type="number" name="diaVencimento" min="1" max="31" required placeholder="15" class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+        </div>
+       </div>
+
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Contrato (PDF)</label>
+        <div class="upload-area p-6 text-center cursor-pointer" id="upload-area">
+         <svg class="w-8 h-8 text-slate-400 mx-auto mb-2" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+         </svg>
+         <p class="text-slate-600">Clique para fazer upload do contrato em PDF</p>
+         <p class="text-xs text-slate-400 mt-1">ou arraste e solte o arquivo aqui</p>
+         <input type="file" name="contrato" accept=".pdf" class="hidden" id="input-contrato">
+        </div>
+        <div id="contrato-preview" class="mt-2 hidden">
+         <div class="flex items-center gap-2 p-2 bg-slate-50 rounded-lg">
+          <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+          <span class="text-sm text-slate-700" id="contrato-nome"></span>
+          <button type="button" id="btn-remover-contrato" class="text-red-500 hover:text-red-700 ml-auto">
+           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+           </svg>
+          </button>
+         </div>
+        </div>
+       </div>
+
+       <div class="flex gap-3 pt-4">
+        <button type="button" id="btn-cancelar-ponto" class="flex-1 px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+         Cancelar
+        </button>
+        <button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
+         Cadastrar Ponto
+        </button>
+       </div>
+      </form>
+     </div>
+    </div>
+   </div>
+
+   <!-- Modal Registrar Pagamento -->
+   <div id="modal-registrar-pagamento" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+     <div class="bg-white rounded-xl shadow-xl max-w-md w-full">
+      <div class="px-6 py-4 border-b border-slate-200">
+       <h3 class="text-lg font-semibold text-slate-800">Registrar Pagamento</h3>
+       <p class="text-sm text-slate-500 mt-1" id="ponto-nome-pagamento"></p>
+      </div>
+      <form id="form-registrar-pagamento" class="p-6 space-y-4">
+       <input type="hidden" name="pontoId">
+
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Referência (Mês/Ano)</label>
+        <input type="month" name="referencia" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+       </div>
+
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Data do Recebimento</label>
+        <input type="date" name="dataRecebimento" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+       </div>
+
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Método de Pagamento</label>
+        <select name="metodo" required class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+         <option value="">Selecione o método</option>
+         <option value="dinheiro">💵 Dinheiro</option>
+         <option value="transferencia">🏦 Transferência</option>
+         <option value="boleto">📄 Boleto</option>
+         <option value="cheque">📝 Cheque</option>
+        </select>
+       </div>
+
+       <div>
+        <label class="block text-sm font-medium text-slate-700 mb-2">Observações</label>
+        <textarea name="observacoes" rows="3" placeholder="Observações sobre o pagamento..." class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"></textarea>
+       </div>
+
+       <div class="flex gap-3 pt-4">
+        <button type="button" id="btn-cancelar-pagamento" class="flex-1 px-4 py-2 text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
+         Cancelar
+        </button>
+        <button type="submit" class="flex-1 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg transition-colors">
+         Registrar Pagamento
+        </button>
+       </div>
+      </form>
+     </div>
+    </div>
+   </div>
+
+   <!-- Modal Histórico de Pagamentos -->
+   <div id="modal-historico" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50">
+    <div class="flex items-center justify-center min-h-screen p-4">
+     <div class="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div class="px-6 py-4 border-b border-slate-200">
+       <h3 class="text-lg font-semibold text-slate-800">Histórico de Pagamentos</h3>
+       <p class="text-sm text-slate-500 mt-1" id="ponto-nome-historico"></p>
+      </div>
+      <div class="p-6">
+       <div class="overflow-x-auto">
+        <table class="w-full">
+         <thead class="bg-slate-50">
+          <tr>
+           <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Referência</th>
+           <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Data</th>
+           <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Método</th>
+           <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Valor</th>
+           <th class="px-4 py-2 text-left text-xs font-medium text-slate-500 uppercase tracking-wider">Observações</th>
+          </tr>
+         </thead>
+         <tbody id="tabela-historico" class="divide-y divide-slate-200">
+          <!-- Histórico será inserido aqui -->
+         </tbody>
+        </table>
+       </div>
+       <div id="empty-historico" class="text-center py-8">
+        <p class="text-slate-500">Nenhum pagamento registrado ainda.</p>
+       </div>
+      </div>
+      <div class="px-6 py-4 border-t border-slate-200 bg-slate-50">
+       <button type="button" id="btn-fechar-historico" class="w-full px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors">
+        Fechar
+       </button>
+      </div>
+     </div>
+    </div>
+   </div>
+
+   <!-- Toast Notifications -->
+   <div id="toast" class="fixed bottom-4 right-4 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-y-full transition-transform duration-300 z-50">
+    <p id="toast-message"></p>
+   </div>
+
+   <script>
+    // Dados dos pontos (simulando localStorage)
+    let pontos = JSON.parse(localStorage.getItem('pontos-comercio')) || [];
+
+    // Elementos DOM
+    const modalNovo = document.getElementById('modal-novo-ponto');
+    const modalPagamento = document.getElementById('modal-registrar-pagamento');
+    const modalHistorico = document.getElementById('modal-historico');
+    const formNovo = document.getElementById('form-novo-ponto');
+    const formPagamento = document.getElementById('form-registrar-pagamento');
+    const tabelaPontos = document.getElementById('tabela-pontos');
+    const tabelaHistorico = document.getElementById('tabela-historico');
+    const emptyState = document.getElementById('empty-state');
+    const emptyHistorico = document.getElementById('empty-historico');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toast-message');
+
+    // Upload de contrato
+    const uploadArea = document.getElementById('upload-area');
+    const inputContrato = document.getElementById('input-contrato');
+    const contratoPreview = document.getElementById('contrato-preview');
+    const contratoNome = document.getElementById('contrato-nome');
+
+    // Filtros
+    const filtroBusca = document.getElementById('filtro-busca');
+    const filtroTipo = document.getElementById('filtro-tipo');
+    const filtroStatus = document.getElementById('filtro-status');
+
+    // Estatísticas
+    const totalPontos = document.getElementById('total-pontos');
+    const receitaEsperada = document.getElementById('receita-esperada');
+    const proximosVencimentos = document.getElementById('proximos-vencimentos');
+    const pontosVencidos = document.getElementById('pontos-vencidos');
+
+    // Tipos de pontos com ícones (Placas e Comércio)
+    const tiposPontos = {
+     'placas': '📋 Placas',
+     'comercio': '🏪 Comércio'
+    };
+
+    // Métodos de pagamento
+    const metodosPagamento = {
+     dinheiro: '💵 Dinheiro',
+     transferencia: '🏦 Transferência',
+     boleto: '📄 Boleto',
+     cheque: '📝 Cheque'
+    };
+
+    // Funções utilitárias
+    function formatarMoeda(valor) {
+     return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+     }).format(valor);
+    }
+
+    function formatarData(data) {
+     return new Date(data).toLocaleDateString('pt-BR');
+    }
+
+    function formatarMesAno(mesAno) {
+     const [ano, mes] = mesAno.split('-');
+     const data = new Date(ano, mes - 1);
+     return data.toLocaleDateString('pt-BR', { year: 'numeric', month: 'long' });
+    }
+
+    function verificarStatus(diaVencimento) {
+     const hoje = new Date();
+     const anoAtual = hoje.getFullYear();
+     const mesAtual = hoje.getMonth();
+
+     // Data de vencimento do mês atual
+     const dataVencimento = new Date(anoAtual, mesAtual, diaVencimento);
+
+     // Se já passou do dia de vencimento, verifica se pagou este mês
+     if (hoje > dataVencimento) {
+      return 'vencido';
+     }
+
+     // Próximo vencimento em até 30 dias
+     const diffTime = dataVencimento - hoje;
+     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+     if (diffDays <= 30) {
+      return 'proximo';
+     }
+
+     return 'ativo';
+    }
+
+    function mostrarToast(mensagem, tipo = 'success') {
+     toastMessage.textContent = mensagem;
+     toast.className = `fixed bottom-4 right-4 text-white px-6 py-3 rounded-lg shadow-lg transform transition-transform duration-300 z-50 ${
+      tipo === 'success' ? 'bg-emerald-500' : tipo === 'error' ? 'bg-red-500' : 'bg-blue-500'
+     }`;
+     toast.style.transform = 'translateY(0)';
+     setTimeout(() => {
+      toast.style.transform = 'translateY(100%)';
+     }, 3000);
+    }
+
+    function salvarPontos() {
+     localStorage.setItem('pontos-comercio', JSON.stringify(pontos));
+    }
+
+    function atualizarEstatisticas() {
+     const total = pontos.length;
+     let receita = 0;
+     let proximos = 0;
+     let vencidos = 0;
+
+     pontos.forEach(ponto => {
+      receita += parseFloat(ponto.valorMensal);
+      const status = verificarStatus(ponto.diaVencimento);
+      if (status === 'proximo') proximos++;
+      if (status === 'vencido') vencidos++;
+     });
+
+     totalPontos.textContent = total;
+     receitaEsperada.textContent = formatarMoeda(receita);
+     proximosVencimentos.textContent = proximos;
+     pontosVencidos.textContent = vencidos;
+    }
+
+    function renderizarPontos(pontosFiltrados = pontos) {
+     tabelaPontos.innerHTML = '';
+
+     if (pontosFiltrados.length === 0) {
+      emptyState.style.display = 'block';
+      return;
+     }
+
+     emptyState.style.display = 'none';
+
+     pontosFiltrados.forEach(ponto => {
+      const status = verificarStatus(ponto.diaVencimento);
+      const linha = document.createElement('tr');
+      linha.className = 'table-row';
+      linha.dataset.id = ponto.id;
+
+      linha.innerHTML = `
+       <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-slate-900">${tiposPontos[ponto.tipo]}</div>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-slate-900">${ponto.nome}</div>
+        <div class="text-xs text-slate-500">${ponto.cnpj || 'Sem CNPJ'}</div>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm font-medium text-slate-900">${formatarMoeda(ponto.valorMensal)}</div>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap">
+        <div class="text-sm text-slate-500">Dia ${ponto.diaVencimento}</div>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap">
+        <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full status-${status}">
+         ${status === 'ativo' ? 'Ativo' : status === 'proximo' ? 'Próximo Vencer' : 'Vencido'}
+        </span>
+       </td>
+       <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+        <div class="flex items-center gap-2">
+         <button class="btn-registrar-pagamento text-green-600 hover:text-green-900" title="Registrar Pagamento">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+         </button>
+         <button class="btn-ver-historico text-blue-600 hover:text-blue-900" title="Ver Histórico">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+         </button>
+         <button class="btn-editar text-yellow-600 hover:text-yellow-900" title="Editar">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+         </button>
+         <button class="btn-deletar text-red-600 hover:text-red-900" title="Deletar">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+         </button>
+        </div>
+       </td>
+      `;
+
+      tabelaPontos.appendChild(linha);
+     });
+    }
+
+    function filtrarPontos() {
+     const busca = filtroBusca.value.toLowerCase();
+     const tipo = filtroTipo.value;
+     const statusFiltro = filtroStatus.value;
+
+     const filtrados = pontos.filter(ponto => {
+      const matchBusca = !busca ||
+       ponto.nome.toLowerCase().includes(busca) ||
+       (ponto.cnpj && ponto.cnpj.includes(busca)) ||
+       tiposPontos[ponto.tipo].toLowerCase().includes(busca);
+
+      const matchTipo = !tipo || ponto.tipo === tipo;
+
+      let matchStatus = true;
+      if (statusFiltro) {
+       const statusAtual = verificarStatus(ponto.diaVencimento);
+       matchStatus = statusAtual === statusFiltro;
+      }
+
+      return matchBusca && matchTipo && matchStatus;
+     });
+
+     renderizarPontos(filtrados);
+    }
+
+    function renderizarHistorico(pontoId) {
+     const ponto = pontos.find(p => p.id === pontoId);
+     if (!ponto || !ponto.pagamentos) {
+      emptyHistorico.style.display = 'block';
+      tabelaHistorico.innerHTML = '';
+      return;
+     }
+
+     emptyHistorico.style.display = 'none';
+     tabelaHistorico.innerHTML = '';
+
+     ponto.pagamentos.forEach(pagamento => {
+      const linha = document.createElement('tr');
+      linha.innerHTML = `
+       <td class="px-4 py-2 text-sm text-slate-900">${formatarMesAno(pagamento.referencia)}</td>
+       <td class="px-4 py-2 text-sm text-slate-500">${formatarData(pagamento.dataRecebimento)}</td>
+       <td class="px-4 py-2 text-sm text-slate-900">${metodosPagamento[pagamento.metodo]}</td>
+       <td class="px-4 py-2 text-sm font-medium text-slate-900">${formatarMoeda(ponto.valorMensal)}</td>
+       <td class="px-4 py-2 text-sm text-slate-500">${pagamento.observacoes || '-'}</td>
+      `;
+      tabelaHistorico.appendChild(linha);
+     });
+    }
+
+    // Event Listeners
+    document.getElementById('btn-novo-ponto').addEventListener('click', () => {
+     modalNovo.classList.remove('hidden');
+     formNovo.reset();
+     contratoPreview.classList.add('hidden');
+    });
+
+    document.getElementById('btn-cancelar-ponto').addEventListener('click', () => {
+     modalNovo.classList.add('hidden');
+    });
+
+    document.getElementById('btn-cancelar-pagamento').addEventListener('click', () => {
+     modalPagamento.classList.add('hidden');
+    });
+
+    document.getElementById('btn-fechar-historico').addEventListener('click', () => {
+     modalHistorico.classList.add('hidden');
+    });
+
+    // Upload de contrato
+    uploadArea.addEventListener('click', () => {
+     inputContrato.click();
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+     e.preventDefault();
+     uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+     uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+     e.preventDefault();
+     uploadArea.classList.remove('dragover');
+     const files = e.dataTransfer.files;
+     if (files.length > 0 && files[0].type === 'application/pdf') {
+      inputContrato.files = files;
+      contratoNome.textContent = files[0].name;
+      contratoPreview.classList.remove('hidden');
+     }
+    });
+
+    inputContrato.addEventListener('change', (e) => {
+     if (e.target.files.length > 0) {
+      contratoNome.textContent = e.target.files[0].name;
+      contratoPreview.classList.remove('hidden');
+     }
+    });
+
+    document.getElementById('btn-remover-contrato').addEventListener('click', () => {
+     inputContrato.value = '';
+     contratoPreview.classList.add('hidden');
+    });
+
+    formNovo.addEventListener('submit', (e) => {
+     e.preventDefault();
+     const formData = new FormData(formNovo);
+     const novoPonto = {
+      id: Date.now(),
+      tipo: formData.get('tipo'),
+      nome: formData.get('nome'),
+      cnpj: formData.get('cnpj'),
+      telefone: formData.get('telefone'),
+      email: formData.get('email'),
+      endereco: formData.get('endereco'),
+      valorMensal: parseFloat(formData.get('valorMensal')),
+      diaVencimento: parseInt(formData.get('diaVencimento')),
+      contrato: formData.get('contrato') ? formData.get('contrato').name : null,
+      pagamentos: []
+     };
+
+     pontos.push(novoPonto);
+     salvarPontos();
+     atualizarEstatisticas();
+     renderizarPontos();
+     modalNovo.classList.add('hidden');
+     mostrarToast('Ponto comercial cadastrado com sucesso!');
+    });
+
+    formPagamento.addEventListener('submit', (e) => {
+     e.preventDefault();
+     const formData = new FormData(formPagamento);
+     const pontoId = parseInt(formData.get('pontoId'));
+     const ponto = pontos.find(p => p.id === pontoId);
+
+     if (ponto) {
+      const pagamento = {
+       referencia: formData.get('referencia'),
+       dataRecebimento: formData.get('dataRecebimento'),
+       metodo: formData.get('metodo'),
+       observacoes: formData.get('observacoes')
+      };
+
+      if (!ponto.pagamentos) ponto.pagamentos = [];
+      ponto.pagamentos.push(pagamento);
+
+      salvarPontos();
+      atualizarEstatisticas();
+      renderizarPontos();
+      modalPagamento.classList.add('hidden');
+      mostrarToast('Pagamento registrado com sucesso!');
+     }
+    });
+
+    // Event delegation para ações da tabela
+    tabelaPontos.addEventListener('click', (e) => {
+     const linha = e.target.closest('tr');
+     if (!linha) return;
+
+     const id = parseInt(linha.dataset.id);
+     const ponto = pontos.find(p => p.id === id);
+
+     if (e.target.closest('.btn-registrar-pagamento')) {
+      document.getElementById('ponto-nome-pagamento').textContent = ponto.nome;
+      formPagamento.elements['pontoId'].value = ponto.id;
+      formPagamento.reset();
+      modalPagamento.classList.remove('hidden');
+     } else if (e.target.closest('.btn-ver-historico')) {
+      document.getElementById('ponto-nome-historico').textContent = ponto.nome;
+      renderizarHistorico(id);
+      modalHistorico.classList.remove('hidden');
+     } else if (e.target.closest('.btn-editar')) {
+      // Implementar edição se necessário
+      mostrarToast('Funcionalidade de edição em desenvolvimento', 'info');
+     } else if (e.target.closest('.btn-deletar')) {
+      if (confirm('Tem certeza que deseja deletar este ponto comercial?')) {
+       pontos = pontos.filter(p => p.id !== id);
+       salvarPontos();
+       atualizarEstatisticas();
+       renderizarPontos();
+       mostrarToast('Ponto comercial deletado com sucesso!');
+      }
+     }
+    });
+
+    // Filtros
+    filtroBusca.addEventListener('input', filtrarPontos);
+    filtroTipo.addEventListener('change', filtrarPontos);
+    filtroStatus.addEventListener('change', filtrarPontos);
+
+    document.getElementById('btn-limpar-filtros').addEventListener('click', () => {
+     filtroBusca.value = '';
+     filtroTipo.value = '';
+     filtroStatus.value = '';
+     renderizarPontos();
+    });
+
+    // Inicialização
+    atualizarEstatisticas();
+    renderizarPontos();
+   </script>
+
+   <script src="menu-loader.js"></script>
+ </body>
+</html>

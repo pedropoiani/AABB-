@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agendamentos - Sistema de Gestão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .booking-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .booking-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .booking-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .booking-card-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .booking-card-info h3 {
+      font-size: 1.125rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .booking-card-info p {
+      font-size: 0.875rem;
+      opacity: 0.9;
+    }
+
+    .booking-card-logo {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 3rem;
+      height: 3rem;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card-item {
+      transition: transform 0.2s ease;
+    }
+
+    .card-item:hover {
+      transform: translateY(-2px);
+    }
+
+    .calendar-container {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5rem;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .calendar-day:hover {
+      background: #f3f4f6;
+    }
+
+    .calendar-day.selected {
+      background: #10b981;
+      color: white;
+    }
+
+    .calendar-day.today {
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 600;
+    }
+
+    .calendar-day.has-bookings::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      background: #ef4444;
+      border-radius: 50%;
+    }
+
+    .booking-modal {
+      background: white;
+      border-radius: 1rem;
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .time-slot {
+      transition: all 0.2s ease;
+    }
+
+    .time-slot:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .time-slot.selected {
+      background: #10b981;
+      color: white;
+    }
+
+    .time-slot.available {
+      background: #f0fdf4;
+      border: 2px solid #10b981;
+      color: #059669;
+    }
+
+    .time-slot.unavailable {
+      background: #fef2f2;
+      border: 2px solid #ef4444;
+      color: #dc2626;
+      cursor: not-allowed;
+    }
+  </style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="menu-container"></div>
+  <div id="app" class="h-full overflow-auto">
+   <main class="ml-64 p-8">
+    <header class="mb-8">
+     <div class="flex items-center justify-between">
+      <div>
+       <h2 class="text-3xl font-bold text-slate-800">Agendamentos</h2>
+       <p class="text-slate-500 mt-1">Gerencie reservas e agendamentos do clube</p>
+      </div>
+      <button onclick="openBookingModal()" class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors flex items-center gap-2">
+       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+       </svg> Novo Agendamento
+      </button>
+     </div>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+     <div class="lg:col-span-2">
+      <div class="calendar-container mb-8">
+       <div class="calendar-header">
+        <button onclick="previousMonth()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+         <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+         </svg>
+        </button>
+        <h3 class="text-xl font-bold text-slate-800" id="calendar-title">Janeiro 2024</h3>
+        <button onclick="nextMonth()" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
+         <svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+         </svg>
+        </button>
+       </div>
+
+       <div class="calendar-grid">
+        <div class="text-center font-semibold text-slate-600 py-2">Dom</div>
+        <div class="text-center font-semibold text-slate-600 py-2">Seg</div>
+        <div class="text-center font-semibold text-slate-600 py-2">Ter</div>
+        <div class="text-center font-semibold text-slate-600 py-2">Qua</div>
+        <div class="text-center font-semibold text-slate-600 py-2">Qui</div>
+        <div class="text-center font-semibold text-slate-600 py-2">Sex</div>
+        <div class="text-center font-semibold text-slate-600 py-2">Sáb</div>
+        <div id="calendar-days"></div>
+       </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 shadow-sm">
+       <h3 class="text-xl font-bold text-slate-800 mb-6">Agendamentos de Hoje</h3>
+       <div id="today-bookings" class="space-y-4">
+       </div>
+       <div id="no-bookings" class="hidden text-center py-8">
+        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
+         <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+         </svg>
+        </div>
+        <p class="text-slate-500 font-medium">Nenhum agendamento para hoje</p>
+       </div>
+      </div>
+     </div>
+
+     <div>
+      <div class="bg-white rounded-xl p-6 shadow-sm mb-6">
+       <h3 class="text-lg font-bold text-slate-800 mb-4">Filtros</h3>
+       <div class="space-y-4">
+        <div>
+         <label class="block text-sm font-semibold text-slate-700 mb-2">Espaço</label>
+         <select id="filter-space" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+          <option value="">Todos os espaços</option>
+         </select>
+        </div>
+        <div>
+         <label class="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+         <select id="filter-status" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white">
+          <option value="">Todos os status</option>
+          <option value="confirmada">Confirmada</option>
+          <option value="pendente">Pendente</option>
+          <option value="cancelada">Cancelada</option>
+         </select>
+        </div>
+       </div>
+      </div>
+
+      <div class="bg-white rounded-xl p-6 shadow-sm">
+       <h3 class="text-lg font-bold text-slate-800 mb-4">Próximos Agendamentos</h3>
+       <div id="upcoming-bookings" class="space-y-4">
+       </div>
+      </div>
+     </div>
+    </div>
+   </main>
+
+   <div id="modal-booking" class="fixed inset-0 z-50 hidden">
+    <div class="modal-backdrop absolute inset-0 bg-black bg-opacity-50" onclick="closeBookingModal()"></div>
+    <div class="booking-modal absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+     <div class="flex items-center justify-between mb-6">
+      <h3 class="text-2xl font-bold text-slate-800">Novo Agendamento</h3>
+      <button onclick="closeBookingModal()" class="w-10 h-10 rounded-full hover:bg-slate-100 flex items-center justify-center transition-colors">
+       <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+       </svg>
+      </button>
+     </div>
+
+     <form id="booking-form" class="space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+       <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Espaço</label>
+        <select id="booking-space" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+         <option value="">Selecione um espaço</option>
+        </select>
+       </div>
+       <div>
+        <label class="block text-sm font-semibold text-slate-700 mb-2">Sócio</label>
+        <select id="booking-socio" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+         <option value="">Selecione um sócio</option>
+        </select>
+       </div>
+      </div>
+
+      <div>
+       <label class="block text-sm font-semibold text-slate-700 mb-2">Data</label>
+       <input type="date" id="booking-date" class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none" required>
+      </div>
+
+      <div>
+       <label class="block text-sm font-semibold text-slate-700 mb-4">Horários Disponíveis</label>
+       <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="time-slots">
+       </div>
+      </div>
+
+      <div class="flex gap-3 pt-4">
+       <button type="button" onclick="closeBookingModal()" class="flex-1 px-6 py-3 border border-slate-200 text-slate-700 rounded-xl font-semibold hover:bg-slate-50 transition-colors">
+        Cancelar
+       </button>
+       <button type="submit" class="flex-1 px-6 py-3 bg-emerald-600 text-white rounded-xl font-semibold hover:bg-emerald-700 transition-colors">
+        Confirmar Agendamento
+       </button>
+      </div>
+     </form>
+    </div>
+   </div>
+
+   <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <div class="bg-slate-800 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
+     <span id="toast-icon">✅</span>
+     <span id="toast-message">Operação realizada com sucesso!</span>
+    </div>
+   </div>
+  </div>
+
+  <script>
+    let currentDate = new Date();
+    let selectedDate = null;
+    let selectedTimeSlot = null;
+
+    let bookings = [
+      {
+        id: 'RES-1',
+        spaceId: 'ESP-1',
+        socioId: 'SOC-1',
+        data: '2024-01-15',
+        horario: '14:00-16:00',
+        status: 'confirmada'
+      },
+      {
+        id: 'RES-2',
+        spaceId: 'ESP-2',
+        socioId: 'SOC-2',
+        data: '2024-01-16',
+        horario: '19:00-21:00',
+        status: 'pendente'
+      }
+    ];
+
+    let spaces = [
+      {
+        id: 'ESP-1',
+        nome: 'Salão de Festas Principal',
+        tipo: 'salao'
+      },
+      {
+        id: 'ESP-2',
+        nome: 'Churrasqueira Coberta',
+        tipo: 'churrasqueira'
+      },
+      {
+        id: 'ESP-3',
+        nome: 'Piscina Adultos',
+        tipo: 'piscina'
+      },
+      {
+        id: 'ESP-4',
+        nome: 'Quadra de Tênis',
+        tipo: 'quadra'
+      }
+    ];
+
+    let socios = [
+      {
+        id: 'SOC-1',
+        nome: 'João Silva'
+      },
+      {
+        id: 'SOC-2',
+        nome: 'Pedro Oliveira'
+      }
+    ];
+
+    function renderCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      document.getElementById('calendar-title').textContent = 
+        new Date(year, month).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+      const firstDay = new Date(year, month, 1);
+      const lastDay = new Date(year, month + 1, 0);
+      const startDate = new Date(firstDay);
+      startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+      const calendarDays = document.getElementById('calendar-days');
+      calendarDays.innerHTML = '';
+
+      for (let i = 0; i < 42; i++) {
+        const day = new Date(startDate);
+        day.setDate(startDate.getDate() + i);
+
+        const dayNumber = day.getDate();
+        const isCurrentMonth = day.getMonth() === month;
+        const isToday = day.toDateString() === new Date().toDateString();
+        const isSelected = selectedDate && day.toDateString() === selectedDate.toDateString();
+        const hasBookings = bookings.some(b => new Date(b.data).toDateString() === day.toDateString());
+
+        let classes = 'calendar-day ';
+        if (!isCurrentMonth) classes += 'text-slate-300 ';
+        if (isToday) classes += 'today ';
+        if (isSelected) classes += 'selected ';
+        if (hasBookings) classes += 'has-bookings ';
+
+        calendarDays.innerHTML += `
+          <div class="${classes}" onclick="selectDate('${day.toISOString().split('T')[0]}')">
+            ${dayNumber}
+          </div>
+        `;
+      }
+    }
+
+    function selectDate(dateString) {
+      selectedDate = new Date(dateString);
+      renderCalendar();
+      renderTodayBookings();
+    }
+
+    function previousMonth() {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      renderCalendar();
+    }
+
+    function nextMonth() {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      renderCalendar();
+    }
+
+    function renderTodayBookings() {
+      const today = selectedDate || new Date();
+      const todayString = today.toISOString().split('T')[0];
+
+      const todayBookings = bookings.filter(b => b.data === todayString);
+
+      if (todayBookings.length === 0) {
+        document.getElementById('today-bookings').innerHTML = '';
+        document.getElementById('no-bookings').classList.remove('hidden');
+        return;
+      }
+
+      document.getElementById('no-bookings').classList.add('hidden');
+
+      document.getElementById('today-bookings').innerHTML = todayBookings.map(booking => {
+        const space = spaces.find(s => s.id === booking.spaceId);
+        const socio = socios.find(s => s.id === booking.socioId);
+
+        const statusColors = {
+          confirmada: '#10b981',
+          pendente: '#f59e0b',
+          cancelada: '#ef4444'
+        };
+
+        return `
+          <div class="booking-card bg-white rounded-xl shadow-sm overflow-hidden relative">
+            <div class="booking-card-content p-6 relative">
+              <div class="booking-card-info">
+                <h3>${space ? space.nome : 'Espaço não encontrado'}</h3>
+                <p>${socio ? socio.nome : 'Sócio não encontrado'}</p>
+                <p class="text-sm opacity-90 mt-2">${booking.horario}</p>
+              </div>
+              <div class="mt-4">
+                <span style="background: ${statusColors[booking.status]}; padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; color: white;">
+                  ${booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+                </span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderUpcomingBookings() {
+      const today = new Date();
+      const upcoming = bookings
+        .filter(b => new Date(b.data) >= today)
+        .sort((a, b) => new Date(a.data) - new Date(b.data))
+        .slice(0, 5);
+
+      document.getElementById('upcoming-bookings').innerHTML = upcoming.map(booking => {
+        const space = spaces.find(s => s.id === booking.spaceId);
+        const socio = socios.find(s => s.id === booking.socioId);
+        const date = new Date(booking.data).toLocaleDateString('pt-BR');
+
+        return `
+          <div class="p-4 bg-slate-50 rounded-lg">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="font-semibold text-slate-800">${space ? space.nome : 'Espaço'}</p>
+                <p class="text-sm text-slate-600">${socio ? socio.nome : 'Sócio'}</p>
+                <p class="text-xs text-slate-500">${date} - ${booking.horario}</p>
+              </div>
+              <span class="px-2 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                ${booking.status}
+              </span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function openBookingModal() {
+      const modal = document.getElementById('modal-booking');
+      modal.classList.remove('hidden');
+
+      // Populate space select
+      const spaceSelect = document.getElementById('booking-space');
+      spaceSelect.innerHTML = '<option value="">Selecione um espaço</option>' +
+        spaces.map(space => `<option value="${space.id}">${space.nome}</option>`).join('');
+
+      // Populate socio select
+      const socioSelect = document.getElementById('booking-socio');
+      socioSelect.innerHTML = '<option value="">Selecione um sócio</option>' +
+        socios.map(socio => `<option value="${socio.id}">${socio.nome} (${socio.id})</option>`).join('');
+
+      // Set default date to today
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('booking-date').value = today;
+
+      updateTimeSlots();
+    }
+
+    function closeBookingModal() {
+      document.getElementById('modal-booking').classList.add('hidden');
+      selectedTimeSlot = null;
+      document.getElementById('booking-form').reset();
+    }
+
+    function updateTimeSlots() {
+      const date = document.getElementById('booking-date').value;
+      const spaceId = document.getElementById('booking-space').value;
+
+      if (!date || !spaceId) {
+        document.getElementById('time-slots').innerHTML = '<p class="col-span-full text-center text-slate-500">Selecione data e espaço</p>';
+        return;
+      }
+
+      const timeSlots = [
+        '09:00-11:00', '11:00-13:00', '14:00-16:00', '16:00-18:00', '19:00-21:00'
+      ];
+
+      const existingBookings = bookings.filter(b => b.spaceId === spaceId && b.data === date);
+
+      document.getElementById('time-slots').innerHTML = timeSlots.map(slot => {
+        const isBooked = existingBookings.some(b => b.horario === slot);
+        const isSelected = selectedTimeSlot === slot;
+
+        let classes = 'time-slot p-3 rounded-lg text-center font-medium cursor-pointer ';
+        if (isBooked) {
+          classes += 'unavailable';
+        } else if (isSelected) {
+          classes += 'selected';
+        } else {
+          classes += 'available';
+        }
+
+        return `
+          <div class="${classes}" onclick="${isBooked ? '' : `selectTimeSlot('${slot}')`}">
+            ${slot}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function selectTimeSlot(slot) {
+      selectedTimeSlot = slot;
+      updateTimeSlots();
+    }
+
+    function showToast(message, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = message;
+      document.getElementById('toast-icon').textContent = icon;
+
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    // Event listeners
+    document.getElementById('filter-space').addEventListener('change', renderUpcomingBookings);
+    document.getElementById('filter-status').addEventListener('change', renderUpcomingBookings);
+
+    document.getElementById('booking-space').addEventListener('change', updateTimeSlots);
+    document.getElementById('booking-date').addEventListener('change', updateTimeSlots);
+
+    document.getElementById('booking-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const spaceId = document.getElementById('booking-space').value;
+      const socioId = document.getElementById('booking-socio').value;
+      const date = document.getElementById('booking-date').value;
+
+      if (!spaceId || !socioId || !date || !selectedTimeSlot) {
+        showToast('Preencha todos os campos', '⚠️');
+        return;
+      }
+
+      // Add booking
+      const newBooking = {
+        id: 'RES-' + (bookings.length + 1),
+        spaceId,
+        socioId,
+        data: date,
+        horario: selectedTimeSlot,
+        status: 'confirmada'
+      };
+
+      bookings.push(newBooking);
+
+      showToast('Agendamento confirmado com sucesso!');
+      closeBookingModal();
+      renderCalendar();
+      renderTodayBookings();
+      renderUpcomingBookings();
+    });
+
+    // Initialize
+    renderCalendar();
+    renderTodayBookings();
+    renderUpcomingBookings();
+
+    // Populate filters
+    const spaceFilter = document.getElementById('filter-space');
+    spaceFilter.innerHTML = '<option value="">Todos os espaços</option>' +
+      spaces.map(space => `<option value="${space.id}">${space.nome}</option>`).join('');
+  </script>
+  <script src="menu-loader.js"></script>
+ </body>
+</html>

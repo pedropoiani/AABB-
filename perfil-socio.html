@@ -1,0 +1,542 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Perfil do Sócio - Sistema de Gestão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .timeline-item {
+      position: relative;
+      padding-left: 2rem;
+      padding-bottom: 2rem;
+    }
+
+    .timeline-item:last-child {
+      padding-bottom: 0;
+    }
+
+    .timeline-item::before {
+      content: '';
+      position: absolute;
+      left: 0.375rem;
+      top: 2rem;
+      bottom: 0;
+      width: 2px;
+      background: #e2e8f0;
+    }
+
+    .timeline-item:last-child::before {
+      display: none;
+    }
+
+    .timeline-dot {
+      position: absolute;
+      left: 0;
+      top: 0.5rem;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      border: 3px solid white;
+      box-shadow: 0 0 0 2px currentColor;
+    }
+
+    .stat-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      border-radius: 9999px;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .qr-scan-card {
+      transition: all 0.2s ease;
+    }
+
+    .qr-scan-card:hover {
+      background: #f8fafc;
+    }
+  </style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="menu-container"></div>
+  <div id="app" class="h-full overflow-auto">
+   <main class="ml-64 p-8">
+    
+    <div class="mb-6">
+     <button onclick="window.location.href='socios.html'" class="flex items-center gap-2 text-slate-600 hover:text-slate-800 font-medium transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+      </svg>
+      Voltar para Sócios
+     </button>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+     <div class="relative h-32 bg-gradient-to-r from-emerald-500 to-teal-600">
+      <div class="absolute -bottom-12 left-8">
+       <div id="profile-photo" class="w-24 h-24 rounded-full border-4 border-white bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-3xl shadow-lg">
+        JS
+       </div>
+      </div>
+     </div>
+     <div class="pt-16 pb-6 px-8">
+      <div class="flex items-start justify-between">
+       <div>
+        <h1 id="socio-nome" class="text-3xl font-bold text-slate-800 mb-2">Carregando...</h1>
+        <p id="socio-id" class="text-slate-500 font-medium">ID: ---</p>
+       </div>
+       <div class="flex gap-3">
+        <span id="socio-status-badge" class="badge-status bg-emerald-100 text-emerald-700">
+         <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+         Ativo
+        </span>
+        <button onclick="window.location.href='socios.html'" class="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 font-medium transition-colors">
+         Editar Perfil
+        </button>
+       </div>
+      </div>
+     </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+       <p class="text-slate-500 text-sm font-medium">Total de Acessos</p>
+       <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+       </div>
+      </div>
+      <p id="total-acessos" class="text-3xl font-bold text-slate-800">0</p>
+      <p class="text-xs text-slate-400 mt-1">QR codes escaneados</p>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+       <p class="text-slate-500 text-sm font-medium">Último Acesso</p>
+       <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+       </div>
+      </div>
+      <p id="ultimo-acesso" class="text-lg font-bold text-slate-800">Nunca</p>
+      <p class="text-xs text-slate-400 mt-1">Data e hora</p>
+     </div>
+
+     <div class="stat-card bg-white p-6 rounded-xl shadow-sm">
+      <div class="flex items-center justify-between mb-2">
+       <p class="text-slate-500 text-sm font-medium">Acessos este Mês</p>
+       <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+       </div>
+      </div>
+      <p id="acessos-mes" class="text-3xl font-bold text-slate-800">0</p>
+      <p class="text-xs text-slate-400 mt-1">Nos últimos 30 dias</p>
+     </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+     
+     <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="text-lg font-bold text-slate-800 mb-6">Informações Pessoais</h3>
+      <div class="space-y-4">
+       <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Email</p>
+        <p id="socio-email" class="text-sm text-slate-700">---</p>
+       </div>
+       <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Telefone</p>
+        <p id="socio-telefone" class="text-sm text-slate-700">---</p>
+       </div>
+       <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Data de Nascimento</p>
+        <p id="socio-nascimento" class="text-sm text-slate-700">---</p>
+       </div>
+       <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Plano</p>
+        <span id="socio-plano" class="inline-block px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-semibold">---</span>
+       </div>
+       <div>
+        <p class="text-xs font-semibold text-slate-500 uppercase mb-1">Data de Adesão</p>
+        <p id="socio-adesao" class="text-sm text-slate-700">---</p>
+       </div>
+      </div>
+     </div>
+
+     <div class="lg:col-span-2 bg-white rounded-xl shadow-sm p-6">
+      <div class="flex items-center justify-between mb-6">
+       <h3 class="text-lg font-bold text-slate-800">Histórico de Acessos</h3>
+       <div class="flex gap-2">
+        <select id="filter-periodo" class="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+         <option value="all">Todos</option>
+         <option value="today">Hoje</option>
+         <option value="week">Esta Semana</option>
+         <option value="month" selected>Este Mês</option>
+        </select>
+        <button onclick="simulateNewScan()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors">
+         <svg class="w-4 h-4 inline-block mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+         </svg>
+         Simular Scan
+        </button>
+       </div>
+      </div>
+
+      <div id="historico-container" class="max-h-[600px] overflow-y-auto">
+       <div id="timeline-acessos" class="space-y-1">
+        <div class="text-center py-12">
+         <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+          <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+         </div>
+         <p class="text-slate-500 font-medium">Nenhum acesso registrado</p>
+         <p class="text-slate-400 text-sm mt-1">Os escaneamentos de QR code aparecerão aqui</p>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+
+   </main>
+  </div>
+
+  <div id="toast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+   <div class="bg-slate-800 text-white px-6 py-4 rounded-xl shadow-lg flex items-center gap-3">
+    <span id="toast-icon">✅</span>
+    <span id="toast-message">Operação realizada com sucesso!</span>
+   </div>
+  </div>
+
+  <script>
+    let socio = null;
+    let acessos = [];
+
+    const locaisAcesso = [
+      'Portaria Principal',
+      'Área de Lazer',
+      'Quadra de Tênis',
+      'Piscina',
+      'Academia',
+      'Salão de Festas',
+      'Restaurante',
+      'Estacionamento',
+      'Biblioteca',
+      'Sala de Jogos'
+    ];
+
+    function getSocioIdFromURL() {
+      const params = new URLSearchParams(window.location.search);
+      return params.get('id');
+    }
+
+    function loadSocioData() {
+      const socioId = getSocioIdFromURL();
+      
+      // Simulação de dados - em produção viria de uma API
+      const sociosMock = [
+        {
+          id: 'SOC-1',
+          nome: 'João Silva',
+          email: 'joao@email.com',
+          telefone: '(11) 99999-9999',
+          dataNascimento: '1990-01-15',
+          plano: 'basico',
+          status: 'ativo',
+          foto: '',
+          dataAdesao: '2024-01-01T00:00:00.000Z'
+        },
+        {
+          id: 'SOC-2',
+          nome: 'Maria Santos',
+          email: 'maria@email.com',
+          telefone: '(11) 88888-8888',
+          dataNascimento: '1985-05-20',
+          plano: 'premium',
+          status: 'ativo',
+          foto: '',
+          dataAdesao: '2024-01-15T00:00:00.000Z'
+        },
+        {
+          id: 'SOC-3',
+          nome: 'Pedro Oliveira',
+          email: 'pedro@email.com',
+          telefone: '(11) 77777-7777',
+          dataNascimento: '1992-08-10',
+          plano: 'vip',
+          status: 'pendente',
+          foto: '',
+          dataAdesao: '2024-02-01T00:00:00.000Z'
+        }
+      ];
+
+      socio = sociosMock.find(s => s.id === socioId);
+      
+      if (!socio) {
+        showToast('Sócio não encontrado', '⚠️');
+        setTimeout(() => window.location.href = 'socios.html', 2000);
+        return;
+      }
+
+      // Carregar acessos do localStorage ou criar novos
+      const savedAcessos = localStorage.getItem(`acessos_${socioId}`);
+      if (savedAcessos) {
+        acessos = JSON.parse(savedAcessos);
+      } else {
+        // Gerar alguns acessos de exemplo
+        acessos = generateSampleAcessos(socioId);
+        saveAcessos();
+      }
+
+      renderSocioInfo();
+      updateStats();
+      renderHistorico();
+    }
+
+    function generateSampleAcessos(socioId) {
+      const samples = [];
+      const now = new Date();
+      
+      for (let i = 0; i < 15; i++) {
+        const date = new Date(now);
+        date.setDate(date.getDate() - Math.floor(Math.random() * 30));
+        date.setHours(Math.floor(Math.random() * 12) + 8);
+        date.setMinutes(Math.floor(Math.random() * 60));
+        
+        samples.push({
+          id: `SCAN-${Date.now()}-${i}`,
+          socioId: socioId,
+          dataHora: date.toISOString(),
+          local: locaisAcesso[Math.floor(Math.random() * locaisAcesso.length)],
+          tipo: Math.random() > 0.1 ? 'entrada' : 'saida',
+          validado: true
+        });
+      }
+      
+      return samples.sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
+    }
+
+    function renderSocioInfo() {
+      const initials = socio.nome.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+      
+      document.getElementById('profile-photo').textContent = initials;
+      document.getElementById('socio-nome').textContent = socio.nome;
+      document.getElementById('socio-id').textContent = `ID: ${socio.id}`;
+      document.getElementById('socio-email').textContent = socio.email;
+      document.getElementById('socio-telefone').textContent = socio.telefone;
+      document.getElementById('socio-nascimento').textContent = socio.dataNascimento ? 
+        new Date(socio.dataNascimento).toLocaleDateString('pt-BR') : '---';
+      document.getElementById('socio-adesao').textContent = 
+        new Date(socio.dataAdesao).toLocaleDateString('pt-BR');
+
+      const planoLabels = {
+        basico: 'Básico',
+        premium: 'Premium',
+        vip: 'VIP'
+      };
+      
+      const planoColors = {
+        basico: 'bg-slate-100 text-slate-700',
+        premium: 'bg-purple-100 text-purple-700',
+        vip: 'bg-amber-100 text-amber-700'
+      };
+
+      const planoEl = document.getElementById('socio-plano');
+      planoEl.textContent = planoLabels[socio.plano] || socio.plano;
+      planoEl.className = `inline-block px-3 py-1 rounded-full text-xs font-semibold ${planoColors[socio.plano]}`;
+
+      const statusEl = document.getElementById('socio-status-badge');
+      const statusConfigs = {
+        ativo: { bg: 'bg-emerald-100', text: 'text-emerald-700', dot: 'bg-emerald-500', label: 'Ativo' },
+        pendente: { bg: 'bg-amber-100', text: 'text-amber-700', dot: 'bg-amber-500', label: 'Pendente' },
+        inativo: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500', label: 'Inativo' }
+      };
+      
+      const config = statusConfigs[socio.status];
+      statusEl.className = `badge-status ${config.bg} ${config.text}`;
+      statusEl.innerHTML = `<span class="w-2 h-2 rounded-full ${config.dot}"></span>${config.label}`;
+    }
+
+    function updateStats() {
+      const now = new Date();
+      const mesAtras = new Date(now);
+      mesAtras.setDate(mesAtras.getDate() - 30);
+
+      const acessosMes = acessos.filter(a => new Date(a.dataHora) >= mesAtras);
+      
+      document.getElementById('total-acessos').textContent = acessos.length;
+      document.getElementById('acessos-mes').textContent = acessosMes.length;
+      
+      if (acessos.length > 0) {
+        const ultimoAcesso = new Date(acessos[0].dataHora);
+        const diff = now - ultimoAcesso;
+        const dias = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        
+        let tempoTexto = '';
+        if (dias > 0) {
+          tempoTexto = `Há ${dias} dia${dias > 1 ? 's' : ''}`;
+        } else if (horas > 0) {
+          tempoTexto = `Há ${horas} hora${horas > 1 ? 's' : ''}`;
+        } else {
+          tempoTexto = ultimoAcesso.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        document.getElementById('ultimo-acesso').textContent = tempoTexto;
+      }
+    }
+
+    function getFilteredAcessos() {
+      const periodo = document.getElementById('filter-periodo').value;
+      const now = new Date();
+      
+      return acessos.filter(acesso => {
+        const dataAcesso = new Date(acesso.dataHora);
+        
+        switch(periodo) {
+          case 'today':
+            return dataAcesso.toDateString() === now.toDateString();
+          case 'week':
+            const weekAgo = new Date(now);
+            weekAgo.setDate(weekAgo.getDate() - 7);
+            return dataAcesso >= weekAgo;
+          case 'month':
+            const monthAgo = new Date(now);
+            monthAgo.setDate(monthAgo.getDate() - 30);
+            return dataAcesso >= monthAgo;
+          default:
+            return true;
+        }
+      });
+    }
+
+    function renderHistorico() {
+      const filtered = getFilteredAcessos();
+      const container = document.getElementById('timeline-acessos');
+      
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12">
+           <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-3">
+            <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+           </div>
+           <p class="text-slate-500 font-medium">Nenhum acesso no período</p>
+           <p class="text-slate-400 text-sm mt-1">Altere o filtro para ver mais registros</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map((acesso, index) => {
+        const date = new Date(acesso.dataHora);
+        const dataFormatada = date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+        const horaFormatada = date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        
+        const tipoIcon = acesso.tipo === 'entrada' 
+          ? '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>'
+          : '<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>';
+        
+        const tipoColor = acesso.tipo === 'entrada' ? 'text-emerald-600' : 'text-blue-600';
+        const dotColor = acesso.tipo === 'entrada' ? 'text-emerald-500' : 'text-blue-500';
+        
+        return `
+          <div class="qr-scan-card p-4 rounded-lg border border-slate-100">
+            <div class="flex items-start gap-4">
+              <div class="flex-shrink-0 w-10 h-10 rounded-full ${acesso.tipo === 'entrada' ? 'bg-emerald-100' : 'bg-blue-100'} flex items-center justify-center ${tipoColor}">
+                ${tipoIcon}
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-start justify-between mb-1">
+                  <h4 class="font-semibold text-slate-800">${acesso.local}</h4>
+                  <span class="text-xs text-slate-400">${horaFormatada}</span>
+                </div>
+                <p class="text-sm text-slate-600 mb-2">
+                  <span class="font-medium ${tipoColor} capitalize">${acesso.tipo}</span> • ${dataFormatada}
+                </p>
+                <div class="flex items-center gap-2">
+                  <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-50 text-emerald-700 rounded text-xs font-medium">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    Validado
+                  </span>
+                  <span class="text-xs text-slate-400">ID: ${acesso.id}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function simulateNewScan() {
+      const now = new Date();
+      const novoAcesso = {
+        id: `SCAN-${Date.now()}`,
+        socioId: socio.id,
+        dataHora: now.toISOString(),
+        local: locaisAcesso[Math.floor(Math.random() * locaisAcesso.length)],
+        tipo: Math.random() > 0.5 ? 'entrada' : 'saida',
+        validado: true
+      };
+
+      acessos.unshift(novoAcesso);
+      saveAcessos();
+      updateStats();
+      renderHistorico();
+      showToast('QR Code escaneado com sucesso!', '✅');
+    }
+
+    function saveAcessos() {
+      localStorage.setItem(`acessos_${socio.id}`, JSON.stringify(acessos));
+    }
+
+    function showToast(message, icon = '✅') {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = message;
+      document.getElementById('toast-icon').textContent = icon;
+      
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3000);
+    }
+
+    document.getElementById('filter-periodo').addEventListener('change', renderHistorico);
+
+    // Inicializar
+    loadSocioData();
+  </script>
+
+  <script src="menu-loader.js"></script>
+ </body>
+</html>
