@@ -1,0 +1,745 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estatísticas do Sistema - Sistema de Gestão</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    .stat-card {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+
+    .stat-card.green::before {
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .stat-card.blue::before {
+      background: linear-gradient(90deg, #3b82f6, #2563eb);
+    }
+
+    .stat-card.red::before {
+      background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    .stat-card.amber::before {
+      background: linear-gradient(90deg, #f59e0b, #d97706);
+    }
+
+    .stat-card.purple::before {
+      background: linear-gradient(90deg, #8b5cf6, #7c3aed);
+    }
+
+    .stat-card.teal::before {
+      background: linear-gradient(90deg, #14b8a6, #0d9488);
+    }
+
+    .stat-card.indigo::before {
+      background: linear-gradient(90deg, #6366f1, #4f46e5);
+    }
+
+    .stat-card.rose::before {
+      background: linear-gradient(90deg, #f43f5e, #e11d48);
+    }
+
+    .section-title {
+      position: relative;
+      padding-left: 1rem;
+    }
+
+    .section-title::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #10b981, #059669);
+    }
+
+    .billing-highlight {
+      background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+      border: 1px solid #a7f3d0;
+    }
+
+    .progress-ring {
+      transition: stroke-dashoffset 0.5s ease;
+    }
+
+    .badge-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.375rem 0.75rem;
+      border-radius: 9999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-ok {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .badge-warn {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .badge-danger {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .animate-delay-3 { animation-delay: 0.3s; opacity: 0; }
+    .animate-delay-4 { animation-delay: 0.4s; opacity: 0; }
+    .animate-delay-5 { animation-delay: 0.5s; opacity: 0; }
+  </style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="menu-container"></div>
+  <div id="app" class="h-full overflow-auto">
+
+   <main class="ml-64 p-8">
+
+    <!-- Header -->
+    <header class="mb-8">
+     <div class="flex items-center justify-between">
+      <div>
+       <h2 class="text-3xl font-bold text-slate-800">📈 Estatísticas do Sistema</h2>
+       <p class="text-slate-500 mt-1">Visão geral da saúde e indicadores do sistema</p>
+      </div>
+      <div class="flex items-center gap-3">
+       <span class="badge-status badge-ok" id="badge-geracao">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        Carregando...
+       </span>
+       <span class="text-sm text-slate-400" id="data-atualizacao"></span>
+      </div>
+     </div>
+    </header>
+
+    <!-- ============================================ -->
+    <!-- SEÇÃO 1: COBRANÇA DO SISTEMA -->
+    <!-- ============================================ -->
+    <section class="mb-10 animate-in animate-delay-1">
+     <h3 class="section-title text-xl font-bold text-slate-800 mb-6">Cobrança do Sistema</h3>
+
+     <div class="billing-highlight rounded-2xl p-6 mb-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+       <!-- Sócios Adimplentes -->
+       <div class="bg-white p-5 rounded-xl shadow-sm text-center">
+        <div class="w-12 h-12 mx-auto mb-3 bg-emerald-100 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>
+        </div>
+        <p class="text-sm text-slate-500 font-medium">Sócios Adimplentes</p>
+        <p class="text-3xl font-bold text-emerald-600 mt-1" id="cobranca-adimplentes">0</p>
+        <p class="text-xs text-slate-400 mt-1">titulares no mês</p>
+       </div>
+
+       <!-- Valor da Mensalidade -->
+       <div class="bg-white p-5 rounded-xl shadow-sm text-center">
+        <div class="w-12 h-12 mx-auto mb-3 bg-green-100 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>
+        </div>
+        <p class="text-sm text-slate-500 font-medium">Mensalidade do Sistema</p>
+        <p class="text-3xl font-bold text-green-600 mt-1" id="cobranca-valor">R$ 0,00</p>
+        <p class="text-xs text-slate-400 mt-1">R$ 1,00 × adimplentes</p>
+       </div>
+
+       <!-- Mês de Referência -->
+       <div class="bg-white p-5 rounded-xl shadow-sm text-center">
+        <div class="w-12 h-12 mx-auto mb-3 bg-blue-100 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+         </svg>
+        </div>
+        <p class="text-sm text-slate-500 font-medium">Mês de Referência</p>
+        <p class="text-2xl font-bold text-blue-600 mt-1" id="cobranca-mes-ref">—</p>
+        <p class="text-xs text-slate-400 mt-1" id="cobranca-ano-ref"></p>
+       </div>
+
+       <!-- Data Limite -->
+       <div class="bg-white p-5 rounded-xl shadow-sm text-center">
+        <div class="w-12 h-12 mx-auto mb-3 bg-amber-100 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>
+        </div>
+        <p class="text-sm text-slate-500 font-medium">Data Limite de Geração</p>
+        <p class="text-2xl font-bold text-amber-600 mt-1" id="cobranca-data-limite">—</p>
+        <p class="text-xs text-slate-400 mt-1" id="cobranca-status-prazo">até dia 15 do mês seguinte</p>
+       </div>
+
+      </div>
+
+      <!-- Fórmula explicativa -->
+      <div class="mt-4 bg-white/70 rounded-xl p-4 flex items-center gap-4">
+       <div class="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+       </div>
+       <div>
+        <p class="text-sm font-semibold text-slate-700">Regra de cálculo</p>
+        <p class="text-sm text-slate-500" id="formula-descricao">
+         Total da Mensalidade = Quantidade de Sócios Adimplentes × R$ 1,00
+        </p>
+       </div>
+      </div>
+     </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- SEÇÃO 2: CARDS RESUMO -->
+    <!-- ============================================ -->
+    <section class="mb-10 animate-in animate-delay-2">
+     <h3 class="section-title text-xl font-bold text-slate-800 mb-6">Resumo Geral</h3>
+
+     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <!-- Card: Sócios Ativos -->
+      <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden blue">
+       <div class="flex items-center justify-between">
+        <div>
+         <p class="text-slate-500 text-sm font-medium">👥 Sócios Cadastrados</p>
+         <p class="text-3xl font-bold text-slate-800 mt-1" id="card-total-socios">0</p>
+         <p class="text-xs text-slate-400 mt-1">titulares registrados</p>
+        </div>
+        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+         </svg>
+        </div>
+       </div>
+      </div>
+
+      <!-- Card: Adimplentes -->
+      <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden green">
+       <div class="flex items-center justify-between">
+        <div>
+         <p class="text-slate-500 text-sm font-medium">✅ Adimplentes</p>
+         <p class="text-3xl font-bold text-emerald-600 mt-1" id="card-adimplentes">0</p>
+         <p class="text-xs text-slate-400 mt-1" id="card-adimplentes-pct">0% do total</p>
+        </div>
+        <div class="w-12 h-12 bg-emerald-100 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>
+        </div>
+       </div>
+      </div>
+
+      <!-- Card: Inadimplentes -->
+      <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden red">
+       <div class="flex items-center justify-between">
+        <div>
+         <p class="text-slate-500 text-sm font-medium">❌ Inadimplentes</p>
+         <p class="text-3xl font-bold text-red-600 mt-1" id="card-inadimplentes">0</p>
+         <p class="text-xs text-slate-400 mt-1" id="card-inadimplentes-pct">0% do total</p>
+        </div>
+        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>
+        </div>
+       </div>
+      </div>
+
+      <!-- Card: Mensalidade do Sistema -->
+      <div class="stat-card bg-white p-6 rounded-xl shadow-sm relative overflow-hidden green">
+       <div class="flex items-center justify-between">
+        <div>
+         <p class="text-slate-500 text-sm font-medium">💰 Mensalidade do Sistema</p>
+         <p class="text-3xl font-bold text-green-600 mt-1" id="card-mensalidade">R$ 0,00</p>
+         <p class="text-xs text-slate-400 mt-1" id="card-mensalidade-ref">Ref: —</p>
+        </div>
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+         <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>
+        </div>
+       </div>
+      </div>
+
+     </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- SEÇÃO 3: INDICADORES GERAIS -->
+    <!-- ============================================ -->
+    <section class="mb-10 animate-in animate-delay-3">
+     <h3 class="section-title text-xl font-bold text-slate-800 mb-6">Indicadores Gerais do Sistema</h3>
+
+     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Coluna 1: Sócios -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+       <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+         <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+         </svg>
+        </div>
+        Sócios
+       </h4>
+       <div class="space-y-4">
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Total cadastrados</span>
+         <span class="font-bold text-slate-800" id="ind-total-cadastrados">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Adimplentes</span>
+         <span class="font-bold text-emerald-600" id="ind-adimplentes">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Inadimplentes</span>
+         <span class="font-bold text-red-600" id="ind-inadimplentes">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2">
+         <span class="text-sm text-slate-500">Percentual de adimplência</span>
+         <span class="font-bold text-emerald-600" id="ind-pct-adimplencia">0%</span>
+        </div>
+        <!-- Barra de progresso da adimplência -->
+        <div class="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+         <div class="h-full rounded-full transition-all duration-500" id="barra-adimplencia" style="width: 0%; background: linear-gradient(90deg, #10b981, #059669);"></div>
+        </div>
+       </div>
+      </div>
+
+      <!-- Coluna 2: Dependentes e Planos -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+       <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+         <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+         </svg>
+        </div>
+        Dependentes &amp; Planos
+       </h4>
+       <div class="space-y-4">
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Total de dependentes</span>
+         <span class="font-bold text-slate-800" id="ind-dependentes">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Planos cadastrados</span>
+         <span class="font-bold text-slate-800" id="ind-planos">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Plano Básico</span>
+         <span class="font-bold text-slate-600" id="ind-plano-basico">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Plano Premium</span>
+         <span class="font-bold text-purple-600" id="ind-plano-premium">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2">
+         <span class="text-sm text-slate-500">Plano VIP</span>
+         <span class="font-bold text-amber-600" id="ind-plano-vip">0</span>
+        </div>
+       </div>
+      </div>
+
+      <!-- Coluna 3: Financeiro -->
+      <div class="bg-white rounded-xl shadow-sm p-6">
+       <h4 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+        <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+         <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+         </svg>
+        </div>
+        Financeiro
+       </h4>
+       <div class="space-y-4">
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Total pagamentos registrados</span>
+         <span class="font-bold text-slate-800" id="ind-pagamentos">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Pagamentos confirmados</span>
+         <span class="font-bold text-emerald-600" id="ind-pagamentos-pagos">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Pagamentos pendentes</span>
+         <span class="font-bold text-amber-600" id="ind-pagamentos-pendentes">0</span>
+        </div>
+        <div class="flex items-center justify-between py-2 border-b border-slate-100">
+         <span class="text-sm text-slate-500">Total arrecadado no período</span>
+         <span class="font-bold text-green-600" id="ind-total-arrecadado">R$ 0,00</span>
+        </div>
+        <div class="flex items-center justify-between py-2">
+         <span class="text-sm text-slate-500">Mensalidade do sistema</span>
+         <span class="font-bold text-green-600" id="ind-mensalidade-sistema">R$ 0,00</span>
+        </div>
+       </div>
+      </div>
+
+     </div>
+    </section>
+
+    <!-- ============================================ -->
+    <!-- SEÇÃO 4: TABELA DE DETALHAMENTO -->
+    <!-- ============================================ -->
+    <section class="mb-10 animate-in animate-delay-4">
+     <h3 class="section-title text-xl font-bold text-slate-800 mb-6">Detalhamento por Sócio Titular</h3>
+
+     <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+       <p class="text-sm text-slate-500">Apenas sócios titulares — dependentes não são contabilizados na cobrança</p>
+       <div class="flex items-center gap-3">
+        <select id="filter-status-tabela" class="px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none bg-white" onchange="renderTabelaSocios()">
+         <option value="">Todos</option>
+         <option value="adimplente">Adimplentes</option>
+         <option value="inadimplente">Inadimplentes</option>
+        </select>
+       </div>
+      </div>
+      <table class="w-full">
+       <thead class="bg-slate-50">
+        <tr>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Sócio</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Plano</th>
+         <th class="text-left px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Status Pgto</th>
+         <th class="text-right px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">Custo Sistema</th>
+        </tr>
+       </thead>
+       <tbody id="tabela-socios-body" class="divide-y divide-slate-100">
+       </tbody>
+      </table>
+     </div>
+    </section>
+
+   </main>
+  </div>
+
+  <script>
+    // ========================================================
+    // DADOS MOCKADOS
+    // ========================================================
+    const CUSTO_POR_SOCIO = 1.00;
+
+    const precosPlanos = {
+      basico: 50.00,
+      premium: 100.00,
+      vip: 200.00
+    };
+
+    // Sócios titulares (mock)
+    const sociosTitulares = [
+      { id: 'SOC-1',  nome: 'João Silva',         plano: 'basico',  statusPagamento: 'adimplente' },
+      { id: 'SOC-2',  nome: 'Maria Santos',       plano: 'premium', statusPagamento: 'adimplente' },
+      { id: 'SOC-3',  nome: 'Pedro Oliveira',      plano: 'vip',     statusPagamento: 'inadimplente' },
+      { id: 'SOC-4',  nome: 'Ana Costa',           plano: 'premium', statusPagamento: 'adimplente' },
+      { id: 'SOC-5',  nome: 'Carlos Mendes',       plano: 'basico',  statusPagamento: 'inadimplente' },
+      { id: 'SOC-6',  nome: 'Fernanda Lima',       plano: 'premium', statusPagamento: 'adimplente' },
+      { id: 'SOC-7',  nome: 'Roberto Alves',       plano: 'vip',     statusPagamento: 'adimplente' },
+      { id: 'SOC-8',  nome: 'Juliana Pereira',     plano: 'basico',  statusPagamento: 'adimplente' },
+      { id: 'SOC-9',  nome: 'Marcos Silva',        plano: 'premium', statusPagamento: 'inadimplente' },
+      { id: 'SOC-10', nome: 'Luciana Rocha',       plano: 'vip',     statusPagamento: 'adimplente' },
+      { id: 'SOC-11', nome: 'André Cardoso',       plano: 'basico',  statusPagamento: 'adimplente' },
+      { id: 'SOC-12', nome: 'Camila Fernandes',    plano: 'premium', statusPagamento: 'adimplente' },
+      { id: 'SOC-13', nome: 'Diego Martins',       plano: 'vip',     statusPagamento: 'inadimplente' },
+      { id: 'SOC-14', nome: 'Patrícia Gomes',      plano: 'basico',  statusPagamento: 'adimplente' },
+      { id: 'SOC-15', nome: 'Rafael Souza',        plano: 'premium', statusPagamento: 'adimplente' },
+      { id: 'SOC-16', nome: 'Sabrina Castro',      plano: 'vip',     statusPagamento: 'adimplente' },
+      { id: 'SOC-17', nome: 'Thiago Barbosa',      plano: 'basico',  statusPagamento: 'inadimplente' },
+      { id: 'SOC-18', nome: 'Vanessa Ribeiro',     plano: 'premium', statusPagamento: 'adimplente' },
+      { id: 'SOC-19', nome: 'Wagner Santos',       plano: 'vip',     statusPagamento: 'adimplente' },
+      { id: 'SOC-20', nome: 'Yasmin Oliveira',     plano: 'basico',  statusPagamento: 'adimplente' }
+    ];
+
+    // Dependentes (mock — NÃO entram no cálculo)
+    const dependentes = [
+      { id: 'DEP-1',  titularId: 'SOC-1',  nome: 'Laura Silva' },
+      { id: 'DEP-2',  titularId: 'SOC-1',  nome: 'Pedro Silva Jr.' },
+      { id: 'DEP-3',  titularId: 'SOC-2',  nome: 'Lucas Santos' },
+      { id: 'DEP-4',  titularId: 'SOC-4',  nome: 'Bruno Costa' },
+      { id: 'DEP-5',  titularId: 'SOC-4',  nome: 'Clara Costa' },
+      { id: 'DEP-6',  titularId: 'SOC-6',  nome: 'Gabriel Lima' },
+      { id: 'DEP-7',  titularId: 'SOC-7',  nome: 'Isabela Alves' },
+      { id: 'DEP-8',  titularId: 'SOC-7',  nome: 'Mateus Alves' },
+      { id: 'DEP-9',  titularId: 'SOC-10', nome: 'Luana Rocha' },
+      { id: 'DEP-10', titularId: 'SOC-12', nome: 'Sofia Fernandes' },
+      { id: 'DEP-11', titularId: 'SOC-14', nome: 'Enzo Gomes' },
+      { id: 'DEP-12', titularId: 'SOC-16', nome: 'Alice Castro' },
+      { id: 'DEP-13', titularId: 'SOC-19', nome: 'Heitor Santos' },
+      { id: 'DEP-14', titularId: 'SOC-20', nome: 'Amanda Oliveira' },
+      { id: 'DEP-15', titularId: 'SOC-20', nome: 'Felipe Oliveira' }
+    ];
+
+    // Pagamentos registrados (mock)
+    const pagamentosRegistrados = [
+      { id: 'PAY-1',  socioId: 'SOC-1',  valor: 50.00,  status: 'pago' },
+      { id: 'PAY-2',  socioId: 'SOC-2',  valor: 100.00, status: 'pago' },
+      { id: 'PAY-3',  socioId: 'SOC-3',  valor: 200.00, status: 'pendente' },
+      { id: 'PAY-4',  socioId: 'SOC-4',  valor: 100.00, status: 'pago' },
+      { id: 'PAY-5',  socioId: 'SOC-5',  valor: 50.00,  status: 'pendente' },
+      { id: 'PAY-6',  socioId: 'SOC-6',  valor: 100.00, status: 'pago' },
+      { id: 'PAY-7',  socioId: 'SOC-7',  valor: 200.00, status: 'pago' },
+      { id: 'PAY-8',  socioId: 'SOC-8',  valor: 50.00,  status: 'pago' },
+      { id: 'PAY-9',  socioId: 'SOC-9',  valor: 100.00, status: 'pendente' },
+      { id: 'PAY-10', socioId: 'SOC-10', valor: 200.00, status: 'pago' },
+      { id: 'PAY-11', socioId: 'SOC-11', valor: 50.00,  status: 'pago' },
+      { id: 'PAY-12', socioId: 'SOC-12', valor: 100.00, status: 'pago' },
+      { id: 'PAY-13', socioId: 'SOC-13', valor: 200.00, status: 'pendente' },
+      { id: 'PAY-14', socioId: 'SOC-14', valor: 50.00,  status: 'pago' },
+      { id: 'PAY-15', socioId: 'SOC-15', valor: 100.00, status: 'pago' },
+      { id: 'PAY-16', socioId: 'SOC-16', valor: 200.00, status: 'pago' },
+      { id: 'PAY-17', socioId: 'SOC-17', valor: 50.00,  status: 'pendente' },
+      { id: 'PAY-18', socioId: 'SOC-18', valor: 100.00, status: 'pago' },
+      { id: 'PAY-19', socioId: 'SOC-19', valor: 200.00, status: 'pago' },
+      { id: 'PAY-20', socioId: 'SOC-20', valor: 50.00,  status: 'pago' }
+    ];
+
+    // ========================================================
+    // LÓGICA DE CÁLCULO
+    // ========================================================
+
+    const MESES = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+
+    function calcularEstatisticas() {
+      const hoje = new Date();
+      const mesAtual = hoje.getMonth();     // 0-indexed
+      const anoAtual = hoje.getFullYear();
+      const diaAtual = hoje.getDate();
+
+      // Mês de referência = mês atual
+      const mesReferencia = MESES[mesAtual];
+      const anoReferencia = anoAtual;
+
+      // Data limite = dia 15 do mês seguinte
+      const mesSeguinte = mesAtual + 1;
+      const anoMesSeguinte = mesSeguinte > 11 ? anoAtual + 1 : anoAtual;
+      const mesSeguinteReal = mesSeguinte > 11 ? 0 : mesSeguinte;
+      const dataLimite = new Date(anoMesSeguinte, mesSeguinteReal, 15);
+
+      // Filtrar sócios
+      const adimplentes = sociosTitulares.filter(s => s.statusPagamento === 'adimplente');
+      const inadimplentes = sociosTitulares.filter(s => s.statusPagamento === 'inadimplente');
+      const totalSocios = sociosTitulares.length;
+      const qtdAdimplentes = adimplentes.length;
+      const qtdInadimplentes = inadimplentes.length;
+
+      // Cálculo da mensalidade
+      const mensalidadeSistema = qtdAdimplentes * CUSTO_POR_SOCIO;
+
+      // Percentual
+      const pctAdimplencia = totalSocios > 0 ? Math.round((qtdAdimplentes / totalSocios) * 100) : 0;
+
+      // Status do prazo
+      const dentroPrazo = hoje <= dataLimite;
+
+      // Planos
+      const planoBasico = sociosTitulares.filter(s => s.plano === 'basico').length;
+      const planoPremium = sociosTitulares.filter(s => s.plano === 'premium').length;
+      const planoVip = sociosTitulares.filter(s => s.plano === 'vip').length;
+      const totalPlanos = 3; // basico, premium, vip
+
+      // Pagamentos
+      const totalPagamentos = pagamentosRegistrados.length;
+      const pagamentosPagos = pagamentosRegistrados.filter(p => p.status === 'pago');
+      const pagamentosPendentes = pagamentosRegistrados.filter(p => p.status === 'pendente');
+      const totalArrecadado = pagamentosPagos.reduce((sum, p) => sum + p.valor, 0);
+
+      return {
+        mesReferencia,
+        anoReferencia,
+        dataLimite,
+        dentroPrazo,
+        totalSocios,
+        qtdAdimplentes,
+        qtdInadimplentes,
+        mensalidadeSistema,
+        pctAdimplencia,
+        totalDependentes: dependentes.length,
+        totalPlanos,
+        planoBasico,
+        planoPremium,
+        planoVip,
+        totalPagamentos,
+        pagamentosPagos: pagamentosPagos.length,
+        pagamentosPendentes: pagamentosPendentes.length,
+        totalArrecadado
+      };
+    }
+
+    // ========================================================
+    // RENDERIZAÇÃO
+    // ========================================================
+
+    function formatarMoeda(valor) {
+      return 'R$ ' + valor.toFixed(2).replace('.', ',');
+    }
+
+    function formatarData(date) {
+      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    }
+
+    function atualizarPagina() {
+      const stats = calcularEstatisticas();
+
+      // --- Seção Cobrança ---
+      document.getElementById('cobranca-adimplentes').textContent = stats.qtdAdimplentes;
+      document.getElementById('cobranca-valor').textContent = formatarMoeda(stats.mensalidadeSistema);
+      document.getElementById('cobranca-mes-ref').textContent = stats.mesReferencia;
+      document.getElementById('cobranca-ano-ref').textContent = stats.anoReferencia;
+      document.getElementById('cobranca-data-limite').textContent = formatarData(stats.dataLimite);
+
+      // Status prazo
+      const badgeGeracao = document.getElementById('badge-geracao');
+      if (stats.dentroPrazo) {
+        badgeGeracao.className = 'badge-status badge-ok';
+        badgeGeracao.innerHTML = '<span class="w-2 h-2 rounded-full bg-emerald-500"></span> Dentro do prazo';
+        document.getElementById('cobranca-status-prazo').textContent = 'Dentro do prazo de geração';
+      } else {
+        badgeGeracao.className = 'badge-status badge-warn';
+        badgeGeracao.innerHTML = '<span class="w-2 h-2 rounded-full bg-amber-500"></span> Prazo expirado';
+        document.getElementById('cobranca-status-prazo').textContent = 'Prazo de geração expirado';
+      }
+
+      // Fórmula descritiva
+      document.getElementById('formula-descricao').textContent =
+        `${stats.qtdAdimplentes} sócios adimplentes × R$ 1,00 = ${formatarMoeda(stats.mensalidadeSistema)} — Ref: ${stats.mesReferencia}/${stats.anoReferencia}`;
+
+      // --- Cards Resumo ---
+      document.getElementById('card-total-socios').textContent = stats.totalSocios;
+      document.getElementById('card-adimplentes').textContent = stats.qtdAdimplentes;
+      document.getElementById('card-adimplentes-pct').textContent = stats.pctAdimplencia + '% do total';
+      document.getElementById('card-inadimplentes').textContent = stats.qtdInadimplentes;
+      document.getElementById('card-inadimplentes-pct').textContent = (100 - stats.pctAdimplencia) + '% do total';
+      document.getElementById('card-mensalidade').textContent = formatarMoeda(stats.mensalidadeSistema);
+      document.getElementById('card-mensalidade-ref').textContent = `Ref: ${stats.mesReferencia}/${stats.anoReferencia}`;
+
+      // --- Indicadores Gerais ---
+      document.getElementById('ind-total-cadastrados').textContent = stats.totalSocios;
+      document.getElementById('ind-adimplentes').textContent = stats.qtdAdimplentes;
+      document.getElementById('ind-inadimplentes').textContent = stats.qtdInadimplentes;
+      document.getElementById('ind-pct-adimplencia').textContent = stats.pctAdimplencia + '%';
+      document.getElementById('barra-adimplencia').style.width = stats.pctAdimplencia + '%';
+      document.getElementById('ind-dependentes').textContent = stats.totalDependentes;
+      document.getElementById('ind-planos').textContent = stats.totalPlanos;
+      document.getElementById('ind-plano-basico').textContent = stats.planoBasico;
+      document.getElementById('ind-plano-premium').textContent = stats.planoPremium;
+      document.getElementById('ind-plano-vip').textContent = stats.planoVip;
+      document.getElementById('ind-pagamentos').textContent = stats.totalPagamentos;
+      document.getElementById('ind-pagamentos-pagos').textContent = stats.pagamentosPagos;
+      document.getElementById('ind-pagamentos-pendentes').textContent = stats.pagamentosPendentes;
+      document.getElementById('ind-total-arrecadado').textContent = formatarMoeda(stats.totalArrecadado);
+      document.getElementById('ind-mensalidade-sistema').textContent = formatarMoeda(stats.mensalidadeSistema);
+
+      // Data de atualização
+      document.getElementById('data-atualizacao').textContent = 'Atualizado em ' + new Date().toLocaleString('pt-BR');
+
+      // Tabela
+      renderTabelaSocios();
+    }
+
+    function renderTabelaSocios() {
+      const filtro = document.getElementById('filter-status-tabela').value;
+      const tbody = document.getElementById('tabela-socios-body');
+
+      let lista = [...sociosTitulares];
+      if (filtro) {
+        lista = lista.filter(s => s.statusPagamento === filtro);
+      }
+
+      if (lista.length === 0) {
+        tbody.innerHTML = `
+          <tr>
+           <td colspan="4" class="px-6 py-12 text-center">
+            <p class="text-slate-400">Nenhum sócio encontrado com o filtro selecionado.</p>
+           </td>
+          </tr>`;
+        return;
+      }
+
+      const planoLabels = { basico: 'Básico', premium: 'Premium', vip: 'VIP' };
+      const planoBadgeClass = { basico: 'bg-slate-100 text-slate-600', premium: 'bg-purple-100 text-purple-700', vip: 'bg-amber-100 text-amber-700' };
+
+      tbody.innerHTML = lista.map(socio => {
+        const isAdimplente = socio.statusPagamento === 'adimplente';
+        const custoSistema = isAdimplente ? CUSTO_POR_SOCIO : 0;
+
+        return `
+          <tr class="hover:bg-slate-50 transition-colors">
+           <td class="px-6 py-4">
+            <div class="flex items-center gap-3">
+             <div class="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm">
+              ${socio.nome.charAt(0)}
+             </div>
+             <div>
+              <p class="font-medium text-slate-800 text-sm">${socio.nome}</p>
+              <p class="text-xs text-slate-400">${socio.id}</p>
+             </div>
+            </div>
+           </td>
+           <td class="px-6 py-4">
+            <span class="inline-block px-3 py-1 rounded-full text-xs font-semibold ${planoBadgeClass[socio.plano]}">
+             ${planoLabels[socio.plano]}
+            </span>
+           </td>
+           <td class="px-6 py-4">
+            <span class="badge-status ${isAdimplente ? 'badge-ok' : 'badge-danger'}">
+             <span class="w-2 h-2 rounded-full ${isAdimplente ? 'bg-emerald-500' : 'bg-red-500'}"></span>
+             ${isAdimplente ? 'Adimplente' : 'Inadimplente'}
+            </span>
+           </td>
+           <td class="px-6 py-4 text-right">
+            <span class="font-bold ${isAdimplente ? 'text-green-600' : 'text-slate-400'}">${formatarMoeda(custoSistema)}</span>
+           </td>
+          </tr>`;
+      }).join('');
+    }
+
+    // ========================================================
+    // INICIALIZAÇÃO
+    // ========================================================
+    atualizarPagina();
+  </script>
+
+  <script src="menu-loader.js"></script>
+ </body>
+</html>
